@@ -4,6 +4,7 @@
 
 
 # import libraries
+import sys
 import numpy as np
 from pyfmi import load_fmu
 
@@ -26,7 +27,7 @@ class Emulator:
 		self.simulate_options['ncp'] = 100
 		self.simulate_options['CVode_options']['verbosity'] = 50
 		self.model.initialize()
-		self.res = None
+		self.res = {}
 
 		
 	def __call__(self,time,input):
@@ -48,11 +49,10 @@ class Emulator:
 		res = self.model.simulate(start_time = time[0],final_time=time[-1],input=self._create_input_tuple(time,input), options=self.simulate_options)
 		
 		# interpolate results to the points in time
-		if self.res:
+		if self.res != {}:
 			for key in self.res.keys():
 				self.res[key] = np.append(self.res[key][:-1],np.interp(time,res['time'],res[key]))
 		else:
-			self.res = {}
 			for key in res.keys():
 				self.res[key] = np.interp(time,res['time'],res[key])
 			
@@ -191,8 +191,15 @@ class MPC:
 		else:
 			starttime = 0
 			
+			
+		# prepare a progress bar
+		bar_width = 50
+		sys.stdout.write("[%s]" % (" " * bar_width))
+		sys.stdout.flush()
+		sys.stdout.write("\b" * (bar_width+1))
+		barvalue = 0	
+			
 		while starttime < self.emulationtime:
-			print(starttime/24/3600)
 			# create time vector
 			time = np.arange(starttime,starttime+self.control.receding+0.01*self.resulttimestep,self.resulttimestep)
 			
@@ -210,9 +217,16 @@ class MPC:
 
 			# prepare and run the simulation
 			self.emulator(time,input)
-			
+
 			starttime = self.emulator.res['time'][-1]
 			
+			# update the progress bar
+			if starttime/self.emulationtime*bar_width >= barvalue:
+				addvalue = int(round(starttime/self.emulationtime*bar_width-barvalue))
+				sys.stdout.write(addvalue*'-')
+				sys.stdout.flush()
+				barvalue += addvalue
+		
+		sys.stdout.write("\n")			
 		print('done')
 		
-	
