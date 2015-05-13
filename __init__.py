@@ -46,7 +46,8 @@ class Emulator:
 		"""
 		
 		# simulation
-		res = self.model.simulate(start_time = time[0],final_time=time[-1],input=self._create_input_tuple(time,input), options=self.simulate_options)
+		input_tuple = self._create_input_tuple(time,input)
+		res = self.model.simulate(start_time = time[0],final_time=time[-1],input=input_tuple, options=self.simulate_options)
 		
 		# interpolate results to the points in time
 		if self.res != {}:
@@ -105,8 +106,8 @@ class Stateestimation:
 		self.emulator = emulator
 		self.estimation_function = estimation_function
 		
-	def __call__(self):
-		return self.estimation_function(self.emulator)
+	def __call__(self,time):
+		return self.estimation_function(self.emulator,time)
 
 		
 ###########################################################################
@@ -127,14 +128,11 @@ class Prediction:
 	
 ###########################################################################
 class Control:
-	def __init__(self,stateestimation,prediction,control_function,horizon=3*24*3600,timestep=3600,receding=3600):
+	def __init__(self,stateestimation,prediction,control_parameters=None,horizon=3*24*3600,timestep=3600,receding=3600):
 		"""
 		Parameters:
 		stateestimation :	a Stateestimation object
 		prediction:			a Prediction object
-		control_function:	a function which calculates the control signals ("the plan") with inputs:
-								state: the current state
-								predictions: a dictionary with arrays of predictions
 		"""
 		
 		self.stateestimation = stateestimation
@@ -142,7 +140,29 @@ class Control:
 		self.horizon = horizon
 		self.timestep = timestep
 		self.receding = receding
-		self.control_function = control_function
+		self.control_parameters = control_parameters
+		self.solution = self.formulation()
+		
+	def time(self,starttime):
+		"""
+		starttime:       real start time of the control horizon
+		"""
+		return np.arange(starttime,starttime+self.horizon+0.01*self.timestep,self.timestep,dtype=np.float)
+
+	def formulation(self):
+		"""
+		function that returns a callable function which solves the optimal control problem
+		the returned function has the current state and the predictions as inputs and returns a dict with "the plan"
+		"""
+		
+		control_parameters = self.control_parameters
+		time = self.time()
+		
+		def solution(state,prediction):
+			sol = {}
+			sol['time'] = time()
+	
+		return solution
 	
 	def __call__(self,starttime):
 		"""
@@ -151,21 +171,11 @@ class Control:
 		starttime:       real start time of the control horizon
 		"""
 		
-		time = np.arange(starttime,starttime+self.horizon+0.01*self.timestep,self.timestep,dtype=np.float)
+		state = self.stateestimation(starttime)
+		prediction = self.prediction(self.time(starttime))
+		solution = self.solution(state,prediction)
 		
-		state = self.stateestimation()
-		prediction = self.prediction(time)
-		control = self.control_function(state,prediction)
-		
-		# find the samples where time <= receding and return only these
-		#ind = np.invert(time > self.receding)
-		
-		#control['time'] = time[ind]
-		#for key in control:
-		#	control[key] = control[key][ind]
-		control['time'] = time
-		
-		return control
+		return solution
 
 		
 ###########################################################################
