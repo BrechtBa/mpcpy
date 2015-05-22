@@ -6,11 +6,12 @@
 # import libraries
 import sys
 import numpy as np
+import matplotlib.pyplot as plt
 from pyfmi import load_fmu
 
 ###########################################################################
 class Emulator:
-	def __init__(self,filename,inputs):
+	def __init__(self,filename,inputs,verbosity=50,rtol=1e-6,atol=1e-6,solver='CVode',initializationtime = 1):
 		"""
 		Initialise a fmu file for use as an MPC emulation
 		Parameters:
@@ -23,12 +24,48 @@ class Emulator:
 		self.inputs = inputs
 		
 		self.simulate_options = self.model.simulate_options()
+		
 		self.simulate_options['initialize'] = False
-		self.simulate_options['ncp'] = 100
-		self.simulate_options['CVode_options']['verbosity'] = 50
+		self.simulate_options['ncp'] = 60
+		self.simulate_options['solver'] = solver
+		self.simulate_options['CVode_options']['verbosity'] = verbosity
+		self.simulate_options["CVode_options"]["rtol"] = rtol
+		self.simulate_options["CVode_options"]["atol"] = atol
+		#self.simulate_options["LSODAR_options"]["rtol"] = rtol
+		#self.simulate_options["LSODAR_options"]["atol"] = atol
 		self.model.initialize()
 		self.res = {}
-
+		
+		
+		self.initializationtime = initializationtime
+		self.initialize()
+		
+	def initialize(self):
+		# simulate the model for a very short time to get the initial states in the res dict
+		res = self.model.simulate(start_time=0,final_time=self.initializationtime, options=self.simulate_options)
+		for key in res.keys():
+			self.res[key] = np.array([res[key][0]])
+			
+	def set_initial_conditions(self,ini):
+		"""
+		Inputs:
+		ini    dictionary with initial conditions
+		"""
+		for key in ini:
+			self.model.set(key,ini[key])
+			self.res[key][-1] = ini[key]
+	
+		self.initialize()
+		
+	def set_parameters(self,par):
+		"""
+		Inputs:
+		par    dictionary with parameters
+		"""
+		for key in par:
+			self.model.set(key,par[key])
+		
+		self.initialize()
 		
 	def __call__(self,time,input):
 		"""
@@ -73,18 +110,28 @@ class Emulator:
 	
 ###########################################################################
 class Boundaryconditions:
-	def __init__(self,bcs):
+	def __init__(self,bcs,periodic=True):
 		"""
 		Parameters:
-		bcs:     a dict with the actual boundary conditions and a time vector
+		bcs:     		a dict with the actual boundary conditions and a time vector
 		"""
 		
-		# periodicity is assumed
 		self.boundaryconditions = {}
-		self.boundaryconditions['time'] = np.concatenate((bcs['time'][:-1]-bcs['time'][-1],bcs['time'],bcs['time'][1:]+bcs['time'][-1]))
-		for key in bcs:
-			if key != 'time':
-				self.boundaryconditions[key] =  np.concatenate((bcs[key][:-1],bcs[key],bcs[key][1:]))
+		
+		if periodic:
+			# the entire dataset is repeated 3 times, once before the actual data, the actual data and once after the actual data
+			# this implies the control horizon must be shorter than the boundary conditions dataset
+			self.boundaryconditions['time'] = np.concatenate((bcs['time'][:-1]-bcs['time'][-1],bcs['time'],bcs['time'][1:]+bcs['time'][-1]))
+			for key in bcs:
+				if key != 'time':
+					self.boundaryconditions[key] =  np.concatenate((bcs[key][:-1],bcs[key],bcs[key][1:]))
+		else:
+			# 1st and last value are repeated before and after the actual data
+			self.boundaryconditions['time'] = np.concatenate((bcs['time'][:-1]-bcs['time'][-1],bcs['time'],bcs['time'][1:]+bcs['time'][-1]))
+			for key in bcs:
+				if key != 'time':
+					self.boundaryconditions[key] =  np.concatenate((bcs[key][0]*np.ones(len(bcs['time'][:-1])),bcs[key],bcs[key][-1]*np.ones(len(bcs['time'][1:]))))
+			
 		
 	def __call__(self,time):
 		"""
@@ -102,37 +149,63 @@ class Boundaryconditions:
 		
 ###########################################################################
 class Stateestimation:
-	def __init__(self,emulator,estimation_function):
-		self.emulator = emulator
-		self.estimation_function = estimation_function
+	"""
+	Base class for defining the state estimation for an mpc
+	the "stateestimation" method must be redefined in a child class
+	"""
+	def __init__(self,emulator):
+		"""
+		Parameters:
+		emulator:		an mpcpy.Emulator object
+		"""
 		
+		self.emulator = emulator
+	
+	def stateestimation(self,time):
+		"""
+		"""
+		return None
+
 	def __call__(self,time):
-		return self.estimation_function(self.emulator,time)
+		return self.stateestimation(time)
 
 		
 ###########################################################################
 class Prediction:
-	def __init__(self,boundaryconditions,prediction_function):
+	"""
+	Base class for defining the predictions for an mpc
+	the "prediction" method must be redefined in a child class
+	"""
+	def __init__(self,boundaryconditions):
 		"""
 		Parameters:
-		boundaryconditions:		a boundaryconditions object
-		prediction_function:	a function to make the predictions with inputs:
-									bcs: the interpolated real boundary conditions 
+		boundaryconditions:		an mpcpy.Boundaryconditions object
 		"""
+		
 		self.boundaryconditions = boundaryconditions
-		self.prediction_function = prediction_function
+		
+	def prediction(self,time):
+		"""
+		Defines perfect predictions, returns the exact boundary conditions dict
+		Can be redefined in a child class to contain an actual prediction algorithm
+		"""
+		return self.boundaryconditions(time)
 		
 	def __call__(self,time):
-		return self.prediction_function(self.boundaryconditions(time))
+		return self.prediction(time)
 		
 	
 ###########################################################################
 class Control:
+	"""
+	Base class for defining the control for an mpc
+	the "formulation" method must be redefined in a child class
+	"""
 	def __init__(self,stateestimation,prediction,control_parameters=None,horizon=3*24*3600,timestep=3600,receding=3600):
 		"""
 		Parameters:
-		stateestimation :	a Stateestimation object
-		prediction:			a Prediction object
+		stateestimation :	an mpcpy.Stateestimation object
+		prediction:			an mpcpy.Prediction object
 		"""
 		
 		self.stateestimation = stateestimation
@@ -153,6 +226,7 @@ class Control:
 		"""
 		function that returns a callable function which solves the optimal control problem
 		the returned function has the current state and the predictions as inputs and returns a dict with "the plan"
+		Should be redefined in a child class to contain the actual control algorithm
 		"""
 		
 		control_parameters = self.control_parameters
@@ -181,7 +255,7 @@ class Control:
 ###########################################################################
 class MPC:
 
-	def __init__(self,emulator,control,boundaryconditions,emulationtime=7*24*3600,resulttimestep=600):
+	def __init__(self,emulator,control,boundaryconditions,emulationtime=7*24*3600,resulttimestep=600,plotfunction=None):
 
 		self.emulator = emulator
 		self.control = control
@@ -189,12 +263,16 @@ class MPC:
 
 		self.emulationtime = emulationtime
 		self.resulttimestep = resulttimestep
+		self.plotfunction = plotfunction
 		
 	def __call__(self):
 		"""
 		Runs the mpc simulation
 		"""
 		print('Run MPC')
+		
+		if self.plotfunction:
+			(fig,ax,pl) = self.plotfunction()
 		
 		if self.emulator.res:
 			starttime = self.emulator.res['time'][-1]
@@ -228,6 +306,11 @@ class MPC:
 			# prepare and run the simulation
 			self.emulator(time,input)
 
+			# plot results
+			if self.plotfunction:
+				self.plotfunction(pl=pl,res=self.emulator.res)
+			
+			# update starting time
 			starttime = self.emulator.res['time'][-1]
 			
 			# update the progress bar
@@ -236,6 +319,8 @@ class MPC:
 				sys.stdout.write(addvalue*'-')
 				sys.stdout.flush()
 				barvalue += addvalue
+		
+			
 		
 		sys.stdout.write("\n")			
 		print('done')
