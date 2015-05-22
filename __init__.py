@@ -278,15 +278,15 @@ class MPC:
 			starttime = self.emulator.res['time'][-1]
 		else:
 			starttime = 0
-			
-			
+
+
 		# prepare a progress bar
 		bar_width = 50
 		sys.stdout.write("[%s]" % (" " * bar_width))
 		sys.stdout.flush()
 		sys.stdout.write("\b" * (bar_width+1))
 		barvalue = 0	
-			
+
 		while starttime < self.emulationtime:
 			# create time vector
 			time = np.arange(starttime,starttime+self.control.receding+0.01*self.resulttimestep,self.resulttimestep)
