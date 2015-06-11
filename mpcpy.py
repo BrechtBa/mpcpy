@@ -13,6 +13,7 @@ class Emulator:
 	def __init__(self,dympymodel,inputs,initializationtime = 1):
 		"""
 		Initialize a dympy object for use as an MPC emulation
+		
 		Arguments:
 		dympymodel: a dympy object with an opened and compiled dymola model
 		inputs: a list of strings of the variable names of the inputs
@@ -41,14 +42,14 @@ class Emulator:
 			
 	def set_initial_conditions(self,ini):
 		"""
-		Inputs:
+		Arguments:
 		ini    dictionary with initial conditions
 		"""
 		self.initial_conditions = ini;
 		
 	def set_parameters(self,par):
 		"""
-		Inputs:
+		Arguments:
 		par    dictionary with parameters
 		"""
 		self.parameters = par
@@ -57,7 +58,8 @@ class Emulator:
 		"""
 		Calculate values of the system variables for the length of the inputs
 		Uses the value of _state as starting point and sets the value at the end of the simulation
-		Parameters:
+		
+		Arguments:
 		inputs: dictionary with values for the inputs of the model, time must be a part of it
 		
 		Example:
@@ -91,7 +93,7 @@ class Emulator:
 class Boundaryconditions:
 	def __init__(self,bcs,periodic=True):
 		"""
-		Parameters:
+		Arguments:
 		bcs:     		a dict with the actual boundary conditions and a time vector
 		"""
 		
@@ -115,7 +117,8 @@ class Boundaryconditions:
 	def __call__(self,time):
 		"""
 		Return the interpolated boundary conditions
-		Parameters
+		
+		Arguments:
 		time:   true value for time
 		"""
 		
@@ -134,7 +137,7 @@ class Stateestimation:
 	"""
 	def __init__(self,emulator):
 		"""
-		Parameters:
+		Arguments:
 		emulator:		an mpcpy.Emulator object
 		"""
 		
@@ -157,7 +160,7 @@ class Prediction:
 	"""
 	def __init__(self,boundaryconditions):
 		"""
-		Parameters:
+		Arguments:
 		boundaryconditions:		an mpcpy.Boundaryconditions object
 		"""
 		
@@ -182,7 +185,7 @@ class Control:
 	"""
 	def __init__(self,stateestimation,prediction,control_parameters=None,horizon=3*24*3600,timestep=3600,receding=3600):
 		"""
-		Parameters:
+		Arguments:
 		stateestimation :	an mpcpy.Stateestimation object
 		prediction:			an mpcpy.Prediction object
 		"""
@@ -197,6 +200,7 @@ class Control:
 		
 	def time(self,starttime):
 		"""
+		Arguments:
 		starttime:       real start time of the control horizon
 		"""
 		return np.arange(starttime,starttime+self.horizon+0.01*self.timestep,self.timestep,dtype=np.float)
@@ -220,7 +224,7 @@ class Control:
 	def __call__(self,starttime):
 		"""
 		Calculate the value of the control signal for the next timestep
-		Parameters:
+		Arguments:
 		starttime:       real start time of the control horizon
 		"""
 		
@@ -236,7 +240,7 @@ class MPC:
 
 	def __init__(self,emulator,control,boundaryconditions,emulationtime=7*24*3600,resulttimestep=600,plotfunction=None):
 		"""
-		Inputs:
+		Arguments:
 		emulator:     			an mpcpy.Emulator object
 		control:    	 		an mpcpy.Control object
 		boundaryconditions:     an mpcpy.Boundaryconditions object
@@ -307,7 +311,11 @@ class MPC:
 				barvalue += addbars
 		
 		# copy the results to a local res dictionary
-		self.res.update(self.emulator.res)
+		self.res.update( self.emulator.res )
+		
+		# interpolate the boundary conditions and add the to self.res
+		self.res.update( self.boundaryconditions(res['time']) )
+		
 		
 		sys.stdout.write('  done')
 		sys.stdout.write("\n")
