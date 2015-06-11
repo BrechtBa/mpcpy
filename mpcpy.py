@@ -30,12 +30,14 @@ class Emulator:
 		
 		self.model = dymola
 		self.model.openModel(self.filename)
-		self.initialize()
 		
 	def initialize(self):
 		self.model.compile(self.modelname)
 		self.model.set_parameters(self.initial_conditions)
 		self.model.set_parameters(self.parameters)
+		
+		# clear the result dict
+		self.res = {}
 		
 		# simulate the model for a very short time to get the initial states in the res dict
 		self.model.simulate(StartTime=0,StopTime=self.initializationtime)
@@ -49,7 +51,6 @@ class Emulator:
 		ini    dictionary with initial conditions
 		"""
 		self.initial_conditions = ini;
-		self.initialize()
 		
 	def set_parameters(self,par):
 		"""
@@ -57,7 +58,6 @@ class Emulator:
 		par    dictionary with parameters
 		"""
 		self.parameters = par
-		self.initialize()
 		
 	def __call__(self,input):
 		"""
@@ -257,30 +257,28 @@ class MPC:
 		self.resulttimestep = resulttimestep
 		self.plotfunction = plotfunction
 		
+		self.res = {}
+		
 	def __call__(self):
 		"""
 		Runs the mpc simulation
 		"""
-		print('Run MPC')
 		
 		# initialize the emulator
 		self.emulator.initialize()
-
+		starttime = 0
+		
 		if self.plotfunction:
 			(fig,ax,pl) = self.plotfunction()
-		
-		if self.emulator.res:
-			starttime = self.emulator.res['time'][-1]
-		else:
-			starttime = 0
-
 
 		# prepare a progress bar
-		bar_width = 50
-		sys.stdout.write("[%s]\n " % (" " * bar_width))
-		sys.stdout.flush()
-		#sys.stdout.write("\b" * (bar_width+1))
-		barvalue = 0	
+		barwidth = 80
+		barvalue = 0
+		print('Run MPC %s |' %(' '*(barwidth-10)))
+		#sys.stdout.write('[%s]\n' % (' ' * barwidth))
+		#sys.stdout.flush()
+		#sys.stdout.write('\b' * (barwidth+1))
+		
 
 		while starttime < self.emulationtime:
 			# create time vector
@@ -308,15 +306,17 @@ class MPC:
 			starttime = self.emulator.res['time'][-1]
 			
 			# update the progress bar
-			if starttime/self.emulationtime*bar_width >= barvalue:
-				addvalue = int(round(starttime/self.emulationtime*bar_width-barvalue))
-				sys.stdout.write(addvalue*'-')
+			if starttime/self.emulationtime*barwidth >= barvalue:
+				addbars = int(round(starttime/self.emulationtime*barwidth-barvalue))
+				sys.stdout.write(addbars*'-')
 				sys.stdout.flush()
-				barvalue += addvalue
+				barvalue += addbars
 		
-			
+		# copy the results to a local res dictionary
+		self.res.update(self.emulator.res)
 		
-		sys.stdout.write("\n")			
-		print('done')
+		sys.stdout.write('  done')
+		sys.stdout.write("\n")
+		sys.stdout.flush()
 		
 ###########################################################################
