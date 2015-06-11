@@ -10,29 +10,23 @@ import matplotlib.pyplot as plt
 
 ###########################################################################
 class Emulator:
-	def __init__(self,dymola,filename,modelname,inputs,initializationtime = 1):
+	def __init__(self,dympymodel,inputs,initializationtime = 1):
 		"""
 		Initialize a dympy object for use as an MPC emulation
-		Parameters:
-		filename: path to .mo file relative to calling path or absolute
+		Arguments:
+		dympymodel: a dympy object with an opened and compiled dymola model
 		inputs: a list of strings of the variable names of the inputs
 		"""
 		
-		
-		self.filename = filename
-		self.modelname = modelname
 		self.inputs = inputs
 		self.initializationtime = initializationtime
 		
+		self.model = dympymodel
 		self.initial_conditions = {}
 		self.parameters = {}
 		self.res = {}
 		
-		self.model = dymola
-		self.model.openModel(self.filename)
-		
 	def initialize(self):
-		self.model.compile(self.modelname)
 		self.model.set_parameters(self.initial_conditions)
 		self.model.set_parameters(self.parameters)
 		
