@@ -79,7 +79,7 @@ class Emulator:
 		self.model.simulate(StartTime=input['time'][0],StopTime=input['time'][-1])
 		res = self.model.get_result()
 		
-		# interpolate results to the points in time
+		# interpolate results to the points in time	
 		if self.res != {}:
 			for key in self.res.keys():
 				self.res[key] = np.append(self.res[key][:-1],np.interp(input['time'],res['time'],res[key]))
@@ -314,7 +314,7 @@ class MPC:
 		self.res.update( self.emulator.res )
 		
 		# interpolate the boundary conditions and add the to self.res
-		self.res.update( self.boundaryconditions(res['time']) )
+		self.res.update( self.boundaryconditions(self.res['time']) )
 		
 		
 		sys.stdout.write('  done')
