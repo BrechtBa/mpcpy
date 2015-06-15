@@ -183,7 +183,7 @@ class Control:
 	Base class for defining the control for an mpc
 	the "formulation" method must be redefined in a child class
 	"""
-	def __init__(self,stateestimation,prediction,control_parameters=None,horizon=3*24*3600,timestep=3600,receding=3600):
+	def __init__(self,stateestimation,prediction,parameters=None,horizon=3*24*3600,timestep=3600,receding=3600):
 		"""
 		Arguments:
 		stateestimation :	an mpcpy.Stateestimation object
@@ -195,7 +195,7 @@ class Control:
 		self.horizon = horizon
 		self.timestep = timestep
 		self.receding = receding
-		self.control_parameters = control_parameters
+		self.parameters = parameters
 		self.solution = self.formulation()
 		
 	def time(self,starttime):
