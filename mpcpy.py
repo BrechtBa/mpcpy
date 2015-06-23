@@ -321,4 +321,6 @@ class MPC:
 		sys.stdout.write("\n")
 		sys.stdout.flush()
 		
+		return self.res
+		
 ###########################################################################
