@@ -80,7 +80,7 @@ class Emulator:
 		res = self.dymola.get_result()
 		for key in res.keys():
 			self.res[key] = np.array([res[key][0]])
-			
+				
 	def set_initial_conditions(self,ini):
 		"""
 		Arguments:
@@ -123,10 +123,16 @@ class Emulator:
 		# interpolate results to the points in time	
 		if self.res != {}:
 			for key in self.res.keys():
-				self.res[key] = np.append(self.res[key][:-1],np.interp(input['time'],res['time'],res[key]))
+				if len(res[key]) ==1:
+					self.res[key] = res[key]
+				else:
+					self.res[key] = np.append(self.res[key][:-1],np.interp(input['time'],res['time'],res[key]))
 		else:
 			for key in res.keys():
-				self.res[key] = np.interp(input['time'],res['time'],res[key])
+				if len(res[key]) ==1:
+					self.res[key] = res[key]
+				else:
+					self.res[key] = np.interp(input['time'],res['time'],res[key])
 			
 		
 ###########################################################################
