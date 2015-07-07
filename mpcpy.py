@@ -10,33 +10,33 @@ import matplotlib.pyplot as plt
 
 ###########################################################################
 class Emulator:
-	def __init__(self,dympymodel,inputs,initializationtime = 1):
+	def __init__(self,dymola,inputs,initializationtime = 1):
 		"""
 		Initialize a dympy object for use as an MPC emulation
 		
 		Arguments:
-		dympymodel: a dympy object with an opened and compiled dymola model
+		dymola: a dympy object with an opened and compiled dymola model
 		inputs: a list of strings of the variable names of the inputs
 		"""
 		
 		self.inputs = inputs
 		self.initializationtime = initializationtime
 		
-		self.model = dympymodel
+		self.dymola = dymola
 		self.initial_conditions = {}
 		self.parameters = {}
 		self.res = {}
 		
 	def initialize(self):
-		self.model.set_parameters(self.initial_conditions)
-		self.model.set_parameters(self.parameters)
+		self.dymola.set_parameters(self.initial_conditions)
+		self.dymola.set_parameters(self.parameters)
 		
 		# clear the result dict
 		self.res = {}
 		
 		# simulate the model for a very short time to get the initial states in the res dict
-		self.model.simulate(StartTime=0,StopTime=self.initializationtime)
-		res = self.model.get_result()
+		self.dymola.simulate(StartTime=0,StopTime=self.initializationtime)
+		res = self.dymola.get_result()
 		for key in res.keys():
 			self.res[key] = np.array([res[key][0]])
 			
@@ -70,14 +70,14 @@ class Emulator:
 		"""
 		
 		# simulation
-		self.model.write_dsu(input)
+		self.dymola.write_dsu(input)
 		try:
-			self.model.dsfinal2dsin()
+			self.dymola.dsfinal2dsin()
 		except:
 			pass
 			
-		self.model.simulate(StartTime=input['time'][0],StopTime=input['time'][-1])
-		res = self.model.get_result()
+		self.dymola.simulate(StartTime=input['time'][0],StopTime=input['time'][-1])
+		res = self.dymola.get_result()
 		
 		# interpolate results to the points in time	
 		if self.res != {}:
