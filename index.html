@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Mpcpy : ">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Mpcpy</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/BrechtBa/mpcpy">View on GitHub</a>
+
+          <h1 id="project_title">Mpcpy</h1>
+          <h2 id="project_tagline"></h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/BrechtBa/mpcpy/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/BrechtBa/mpcpy/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a id="mpcpy" class="anchor" href="#mpcpy" aria-hidden="true"><span class="octicon octicon-link"></span></a>mpcpy</h1>
+
+<p>A group of classes to run model predictive control (MPC) simulations using python and Dymola.</p>
+
+<h2>
+<a id="workflow" class="anchor" href="#workflow" aria-hidden="true"><span class="octicon octicon-link"></span></a>Workflow</h2>
+
+<p>In a model predictive control simulation we need several components.
+At first we need an emulator to replace the real world system in our computational environment.
+The system is subjected to certain boundary conditions which may vary.
+Next we need a controller which will determine the inputs we must supply to the emulated system so it moves in the wanted direction.
+As we are considering MPC the controller will consist of a state estimation, a prediction and an optimization</p>
+
+<p>For each of these components base classes are included in mpcpy.
+Some of these classes can be used out off the box, others require child class creation which will be explained below.</p>
+
+<p>before we start import the package</p>
+
+<pre><code>import mpcpy.Emulator 
+</code></pre>
+
+<h3>
+<a id="emulator" class="anchor" href="#emulator" aria-hidden="true"><span class="octicon octicon-link"></span></a>Emulator</h3>
+
+<p>The most important method in the emulator class it the <strong>call</strong> method.
+This method should have the inputs to the emulator as arguments and append the results to it's "res" property.
+By default a dympy Dympola connection is assumed to do the simulation work but the class can be adapted to use other simulation tools.</p>
+
+<p>i.e.
+if we have a dymola model opend and compyled with dympy with 3 inputs "T_amb","Q_flow_sol","Q_flow_hp" you can create an emulator object like this:</p>
+
+<pre><code>emulator = mpcpy.Emulator(dymola,['T_amb','Q_flow_sol','Q_flow_hp'])
+</code></pre>
+
+<h3>
+<a id="boundary-conditions" class="anchor" href="#boundary-conditions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Boundary conditions</h3>
+
+<h3>
+<a id="control" class="anchor" href="#control" aria-hidden="true"><span class="octicon octicon-link"></span></a>Control</h3>
+
+<h4>
+<a id="state-estimation" class="anchor" href="#state-estimation" aria-hidden="true"><span class="octicon octicon-link"></span></a>State estimation</h4>
+
+<h4>
+<a id="prediction" class="anchor" href="#prediction" aria-hidden="true"><span class="octicon octicon-link"></span></a>Prediction</h4>
+
+<h3>
+<a id="mpc" class="anchor" href="#mpc" aria-hidden="true"><span class="octicon octicon-link"></span></a>MPC</h3>
+
+<h1>
+<a id="cplex-in-python" class="anchor" href="#cplex-in-python" aria-hidden="true"><span class="octicon octicon-link"></span></a>Cplex in Python</h1>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Mpcpy maintained by <a href="https://github.com/BrechtBa">BrechtBa</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
