@@ -1,5 +1,4 @@
-mpcpy
------
+# mpcpy
 
 A group of classes to run model predictive control (MPC) simulations using python and Dymola.
 
