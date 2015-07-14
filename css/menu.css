@@ -1,0 +1,11 @@
+
+
+div.menu{
+	position: fixed;
+	top: 180px;
+	left: 20px;
+}
+
+div.menu a{
+	display: block;
+}
