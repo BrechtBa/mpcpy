@@ -1,1 +1,1 @@
-from mpcpy.mpcpy import *
+from mpcpy import *
