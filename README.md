@@ -336,7 +336,7 @@ All supplied arguments must have equal length. Arguments are:
 - `obj`: list of floats, coefficient of the linear objective function accompanying the variable
 - `lb`: list of floats, lower bounds of the variables, defaults to 0
 - `ub`: list of floats, upper bounds of the variables, defaults to 1e20
-- `type`: list of single character strings 'c','i','b' for continuous, integer, binary variables respectively?
+- `type`: list of single character strings 'C','I','B' for continuous, integer, binary variables respectively?
 Cplex is suitable for solving Mixed Integer Programs.
 
 When defining an optimal control problem is is easy to use list comprehensions built into python together with string formatting to generate meaningful names for all variables.
