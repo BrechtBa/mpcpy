@@ -117,23 +117,33 @@ class Emulator:
 		except:
 			pass
 			
-		self.dymola.simulate(StartTime=input['time'][0],StopTime=input['time'][-1])
+		self.dymola.simulate(StartTime=input['time'][0],StopTime=input['time'][-1]) #,Tolerance=0.001
 		res = self.dymola.get_result()
 		
-		# interpolate results to the points in time	
-		if self.res != {}:
-			for key in self.res.keys():
-				if len(res[key]) ==1:
+		
+		# adding the inputs to the result
+		for key in input.keys():
+			# make sure not to do double adding
+			if not key in res.keys():
+				if key in self.res:
+					# append the result
+					if len(input[key]) == 1:
+						self.res[key] = input[key]
+					else:
+						self.res[key] = np.append(self.res[key][:-1],np.interp(input['time'],input['time'],input[key]))
+				else:
+					self.res[key] = np.interp(input['time'],input['time'],input[key])
+		
+		# interpolate results to the input points in time	
+		for key in res.keys():
+			if key in self.res:
+				# append the result
+				if len(res[key]) == 1:
 					self.res[key] = res[key]
 				else:
 					self.res[key] = np.append(self.res[key][:-1],np.interp(input['time'],res['time'],res[key]))
-		else:
-			for key in res.keys():
-				if len(res[key]) ==1:
-					self.res[key] = res[key]
-				else:
-					self.res[key] = np.interp(input['time'],res['time'],res[key])
-			
+			else:
+				self.res[key] = np.interp(input['time'],res['time'],res[key])
 		
 ###########################################################################
 class Stateestimation:
@@ -291,14 +301,18 @@ class MPC:
 			boundaryconditions = self.boundaryconditions(time)
 			control = self.control(starttime)
 			
-			# create input
+			# create input of all controls and the required boundary conditions
 			input = {'time':time}
+			for key in control:
+				if key != 'time':
+					input[key] =  interp_zoh(time,control['time'],control[key])  #np.array([control[key][(len(control['time'])-1)*(t-control['time'][0])/(control['time'][-1]-control['time'][0])] for t in time])
+					
 			for key in self.emulator.inputs:
 				if key in boundaryconditions:
 					input[key] = np.interp(time,boundaryconditions['time'],boundaryconditions[key])
 				elif key in control:
-					input[key] = np.interp(time,control['time'],control[key])
-			
+					input[key] = interp_zoh(time,control['time'],control[key])
+
 			# prepare and run the simulation
 			self.emulator(input)
 			
@@ -328,5 +342,8 @@ class MPC:
 		sys.stdout.flush()
 		
 		return self.res
-		
+
+def interp_zoh(x,xp,fp):
+	return np.array([fp[(len(xp)-1)*(xpp-xp[0])/(xp[-1]-xp[0])] for xpp in x])
+	
 ###########################################################################
