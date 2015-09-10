@@ -296,23 +296,24 @@ class MPC:
 
 		while starttime < self.emulationtime:
 			# create time vector
-			time = np.arange(starttime,starttime+self.control.receding+0.01*self.resulttimestep,self.resulttimestep)
-			
+			time = np.arange(starttime,starttime+self.control.receding+0,self.resulttimestep)
+			#+0.01*self.resulttimestep
 			boundaryconditions = self.boundaryconditions(time)
 			control = self.control(starttime)
 			
 			# create input of all controls and the required boundary conditions
 			input = {'time':time}
-			for key in control:
-				if key != 'time':
-					input[key] =  interp_zoh(time,control['time'],control[key])  #np.array([control[key][(len(control['time'])-1)*(t-control['time'][0])/(control['time'][-1]-control['time'][0])] for t in time])
 					
 			for key in self.emulator.inputs:
 				if key in boundaryconditions:
 					input[key] = np.interp(time,boundaryconditions['time'],boundaryconditions[key])
 				elif key in control:
 					input[key] = interp_zoh(time,control['time'],control[key])
-
+			
+			for key in control:
+				if not key in input:
+					input[key] =  interp_zoh(time,control['time'],control[key])
+					
 			# prepare and run the simulation
 			self.emulator(input)
 			
