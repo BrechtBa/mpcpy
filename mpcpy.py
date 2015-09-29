@@ -117,7 +117,7 @@ class Emulator:
 		except:
 			pass
 			
-		self.dymola.simulate(StartTime=input['time'][0],StopTime=input['time'][-1]) #,Tolerance=0.001
+		self.dymola.simulate(StartTime=input['time'][0],StopTime=input['time'][-1],Tolerance=0.0001)
 		res = self.dymola.get_result()
 		
 		
@@ -199,7 +199,7 @@ class Control:
 	Base class for defining the control for an mpc
 	the "formulation" method must be redefined in a child class
 	"""
-	def __init__(self,stateestimation,prediction,parameters=None,horizon=3*24*3600,timestep=3600,receding=3600):
+	def __init__(self,stateestimation,prediction,parameters=None,horizon=3*24*3600,timestep=3600,receding=3600,savesolutions=False):
 		"""
 		Arguments:
 		stateestimation :	an mpcpy.Stateestimation object
@@ -213,6 +213,9 @@ class Control:
 		self.receding = receding
 		self.parameters = parameters
 		self.solution = self.formulation()
+		
+		self.savesolutions = savesolutions
+		self.solutions = []
 		
 	def time(self,starttime):
 		"""
@@ -229,12 +232,13 @@ class Control:
 		"""
 		
 		control_parameters = self.control_parameters
-		time = self.time()
 		
 		def solution(state,prediction):
 			sol = {}
-			sol['time'] = time()
-	
+			sol['time'] = prediction['time']
+			if self.savesolutions:
+				self.solutions.append(sol)
+			
 		return solution
 	
 	def __call__(self,starttime):
@@ -296,24 +300,24 @@ class MPC:
 
 		while starttime < self.emulationtime:
 			# create time vector
-			time = np.arange(starttime,starttime+self.control.receding+0,self.resulttimestep)
-			#+0.01*self.resulttimestep
+			time = np.arange(starttime,starttime+self.control.receding+0.01*self.resulttimestep,self.resulttimestep,dtype=np.float)
 			boundaryconditions = self.boundaryconditions(time)
 			control = self.control(starttime)
 			
 			# create input of all controls and the required boundary conditions
-			input = {'time':time}
-					
+			# add times at the control timesteps-0.1s to achieve zero order hold
+			ind = np.where((control['time']-1e-6*self.resulttimestep > time[0]) & (control['time']-1e-6*self.resulttimestep <= time[-1]))
+			inputtime = np.sort(np.concatenate((time, control['time'][ind]-1e-6*self.resulttimestep)))
+			input = {'time': inputtime}
+			
 			for key in self.emulator.inputs:
 				if key in boundaryconditions:
-					input[key] = np.interp(time,boundaryconditions['time'],boundaryconditions[key])
-				elif key in control:
-					input[key] = interp_zoh(time,control['time'],control[key])
+					input[key] = np.interp(input['time'],boundaryconditions['time'],boundaryconditions[key])
 			
 			for key in control:
 				if not key in input:
-					input[key] =  interp_zoh(time,control['time'],control[key])
-					
+					input[key] = interp_zoh(input['time'],control['time'],control[key])
+
 			# prepare and run the simulation
 			self.emulator(input)
 			
