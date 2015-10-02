@@ -1,7 +1,16 @@
-# mpcpy
+mpcpy
+=====
 
 A group of classes to run model predictive control (MPC) simulations using python and Dymola.
 
+# Installation
+requires:
+* `numpy`
+
+To install download the latest [release](https://github.com/BrechtBa/mpcpy/releases), unpack, cd to the unpacked folder and run:
+```
+python setup.py install
+```
 
 # Workflow
 In a model predictive control simulation we need several components.
