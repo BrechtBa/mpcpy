@@ -1,4 +1,5 @@
 *.pyc
-dympy.egg-info
+
+mpcpy.egg-info
 dist
 build
