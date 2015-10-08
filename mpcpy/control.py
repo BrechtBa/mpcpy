@@ -62,8 +62,6 @@ class Control:
 		def solution(state,prediction):
 			sol = {}
 			sol['time'] = prediction['time']
-			if self.savesolutions:
-				self.solutions.append(sol)
 			
 		return solution
 	
@@ -78,4 +76,10 @@ class Control:
 		prediction = self.prediction(self.time(starttime))
 		solution = self.solution(state,prediction)
 		
+		if self.savesolutions==True:
+			self.solutions.append(solution)
+		elif self.savesolutions==-1:
+			# save only the last solution
+			self.solutions = [solution]
+				
 		return solution
