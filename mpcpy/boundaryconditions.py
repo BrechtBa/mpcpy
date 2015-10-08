@@ -21,28 +21,32 @@ import sys
 import numpy as np
 
 class Boundaryconditions:
-	def __init__(self,bcs,periodic=True):
+	def __init__(self,bcs,periodic=True,extra_time=7*24*3600):
 		"""
 		Arguments:
-		bcs:     		a dict with the actual boundary conditions and a time vector
+		bcs:     		dict, actual boundary conditions and a time vector
+		periodic:    	boolean, determines how to determine values when time is larger then the boundary conditions time
+		extra_time: 	float, maximum allowed time outside the boundary conditions time
 		"""
 		
-		self.boundaryconditions = {}
+		self.data = {}
+		
+		# create a new time vector including the extra time
+		# this method is about 2 times faster than figuring out the correct time during interpolation
+		ind = np.where( bcs['time']-bcs['time'][0] < extra_time )
+		self.data['time'] = np.concatenate((bcs['time'],bcs['time'][ind]+bcs['time'][-1]+(bcs['time'][1]-bcs['time'][0]) -bcs['time'][0] ))
 		
 		if periodic:
-			# the entire dataset is repeated 3 times, once before the actual data, the actual data and once after the actual data
-			# this implies the control horizon must be shorter than the boundary conditions dataset
-			self.boundaryconditions['time'] = np.concatenate((bcs['time'][:-1]-bcs['time'][-1],bcs['time'],bcs['time'][1:]+bcs['time'][-1]))
+			# the values at time lower than extra_time are repeated at the end of the dataset
+			# extra_time should thus be larger than the control horizon
 			for key in bcs:
 				if key != 'time':
-					self.boundaryconditions[key] =  np.concatenate((bcs[key][:-1],bcs[key],bcs[key][1:]))
+					self.data[key] =  np.concatenate((bcs[key],bcs[key][ind]))
 		else:
-			# 1st and last value are repeated before and after the actual data
-			self.boundaryconditions['time'] = np.concatenate((bcs['time'][:-1]-bcs['time'][-1],bcs['time'],bcs['time'][1:]+bcs['time'][-1]))
+			# last value is repeated after the actual data
 			for key in bcs:
 				if key != 'time':
-					self.boundaryconditions[key] =  np.concatenate((bcs[key][0]*np.ones(len(bcs['time'][:-1])),bcs[key],bcs[key][-1]*np.ones(len(bcs['time'][1:]))))
-			
+					self.data[key] =  np.concatenate((bcs[key],bcs[key][-1]*np.ones(len(ind))))
 		
 	def __call__(self,time):
 		"""
@@ -53,8 +57,10 @@ class Boundaryconditions:
 		"""
 		
 		bcs_int = {}
-		for key in self.boundaryconditions:
-			bcs_int[key] = np.interp(time,self.boundaryconditions['time'],self.boundaryconditions[key])
+		for key in self.data:
+			bcs_int[key] = np.interp(time,self.data['time'],self.data[key])
 		
 		return bcs_int
-		
+	
+	def __getitem__(self,key):
+		return self.data[key]
