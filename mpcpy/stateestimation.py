@@ -25,14 +25,16 @@ class Stateestimation:
 	Base class for defining the state estimation for an mpc
 	the "stateestimation" method must be redefined in a child class
 	"""
-	def __init__(self,emulator):
+	def __init__(self,emulator,parameters=None):
 		"""
 		Arguments:
 		emulator:		an mpcpy.Emulator object
+		parameters:     dict, optional parameter dictionary
 		"""
 		
 		self.emulator = emulator
-	
+		self.parameters = parameters
+		
 	def stateestimation(self,time):
 		"""
 		"""

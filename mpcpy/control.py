@@ -83,3 +83,24 @@ class Control:
 			self.solutions = [solution]
 				
 		return solution
+		
+	def cplex_infeasibilityanalysis(ocp):
+		"""
+		Give information about infeasible constraints in cplex
+		
+		Arguments:
+		ocp:   CPlex object
+		"""
+		
+		ocp.conflict.refine(ocp.conflict.all_constraints())
+		for conflict,v in enumerate(ocp.conflict.get()):
+			if v > 0:
+				for c in ocp.conflict.get_groups(conflict)[1]:
+					if c[0]==1:
+						print( 'Lower bound constraint on variable {}: {}'.format(c[1],ocp.variables.get_names(c[1])) )
+					if c[0]==2:
+						print( 'Upper bound constraint on variable {}: {}'.format(c[1],ocp.variables.get_names(c[1])) )
+					if c[0]==3:
+						print( 'Linear constraint {}: {}'.format(c[1],ocp.linear_constraints.get_names(c[1])) )
+					else:
+						print(ocp.conflict.get_groups(conflict))

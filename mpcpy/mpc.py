@@ -69,7 +69,7 @@ class MPC:
 			control = self.control(starttime)
 			
 			# create input of all controls and the required boundary conditions
-			# add times at the control timesteps-0.1s to achieve zero order hold
+			# add times at the control time steps minus 1e-6 time the result time step to achieve zero order hold
 			ind = np.where((control['time']-1e-6*self.resulttimestep > time[0]) & (control['time']-1e-6*self.resulttimestep <= time[-1]))
 			inputtime = np.sort(np.concatenate((time, control['time'][ind]-1e-6*self.resulttimestep)))
 			input = {'time': inputtime}
@@ -102,7 +102,7 @@ class MPC:
 		# copy the results to a local res dictionary
 		self.res.update( self.emulator.res )
 		
-		# interpolate the boundary conditions and add the to self.res
+		# interpolate the boundary conditions and add them to self.res
 		self.res.update( self.boundaryconditions(self.res['time']) )
 		
 		

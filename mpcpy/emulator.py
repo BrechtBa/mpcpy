@@ -86,10 +86,16 @@ class Emulator:
 			self.dymola.dsfinal2dsin()
 		except:
 			pass
-			
-		self.dymola.simulate(StartTime=input['time'][0],StopTime=input['time'][-1],Tolerance=0.0001)
-		res = self.dymola.get_result()
 		
+		try:
+			self.dymola.simulate(StartTime=input['time'][0],StopTime=input['time'][-1],Tolerance=0.0001)
+		except:
+			print('Ignoring error during simulation at time {}'.format(input['time'][0]));
+			
+		try:
+			res = self.dymola.get_result()
+		except:
+			print('Ignoring error while loading dymola res file at time {}'.format(input['time'][0]));
 		
 		# adding the inputs to the result
 		for key in input.keys():
