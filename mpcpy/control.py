@@ -76,11 +76,15 @@ class Control:
 		prediction = self.prediction(self.time(starttime))
 		solution = self.solution(state,prediction)
 		
-		if self.savesolutions==True:
+		if self.savesolutions == -1:
+			#save all solutions
 			self.solutions.append(solution)
-		elif self.savesolutions==-1:
-			# save only the last solution
-			self.solutions = [solution]
+			
+		elif self.savesolutions > 0:
+			# save only the last x solutions
+			self.solutions.append(solution)
+			if len(self.solutions) > self.savesolutions:
+				self.solutions.pop(0)
 				
 		return solution
 		
