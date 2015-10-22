@@ -49,6 +49,26 @@ class Emulator:
 		self.dymola.simulate(StartTime=0,StopTime=self.initializationtime)
 		res = self.dymola.get_result()
 		
+		# remove the initial conditions and parameters which are not in the results file
+		redosim = False
+		for key in self.initial_conditions:
+			if not key in res:
+				del self.initial_conditions[key]
+				redosim = True
+				
+		for key in self.parameters:
+			if not key in res:
+				del self.parameters[key]
+				redosim = True	
+		
+		# redo the simulation if required
+		if redosim:
+			self.dymola.set_parameters(self.initial_conditions)
+			self.dymola.set_parameters(self.parameters)
+			self.dymola.simulate(StartTime=0,StopTime=self.initializationtime)
+			res = self.dymola.get_result()
+		
+		
 		for key in res:
 			self.res[key] = np.array([res[key][0]])
 				
