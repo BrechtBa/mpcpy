@@ -48,16 +48,23 @@ class Emulator:
 		# simulate the model for a very short time to get the initial states in the res dict
 		self.dymola.simulate(StartTime=0,StopTime=self.initializationtime)
 		res = self.dymola.get_result()
-		for key in res.keys():
+		
+		for key in res:
 			self.res[key] = np.array([res[key][0]])
+				
 				
 	def set_initial_conditions(self,ini):
 		"""
 		Arguments:
 		ini    dictionary with initial conditions
 		"""
-		self.initial_conditions = ini;
-		
+		# set only the last value for each key
+		for key in ini:
+			try:
+				self.initial_conditions[key] = ini[key][-1];
+			except:
+				self.initial_conditions[key] = ini[key];
+				
 	def set_parameters(self,par):
 		"""
 		Arguments:
@@ -75,7 +82,7 @@ class Emulator:
 		
 		Example:
 		em = Emulator()
-		t = np.arange(0.,3600.1,600.)
+		t  = np.arange(0.,3600.1,600.)
 		u1 = 5.*np.ones_like(t)
 		em(t,['u1':u1])
 		"""
