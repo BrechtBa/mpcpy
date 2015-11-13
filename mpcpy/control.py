@@ -25,7 +25,7 @@ class Control:
 	Base class for defining the control for an mpc
 	the "formulation" method must be redefined in a child class
 	"""
-	def __init__(self,stateestimation,prediction,parameters=None,horizon=3*24*3600,timestep=3600,receding=3600,savesolutions=False):
+	def __init__(self,stateestimation,prediction,parameters=None,horizon=3*24*3600,timestep=3600,receding=3600,savesolutions=0):
 		"""
 		Arguments:
 		stateestimation :	an mpcpy.Stateestimation object
@@ -77,7 +77,7 @@ class Control:
 		solution = self.solution(state,prediction)
 		
 		if self.savesolutions == -1:
-			#save all solutions
+			# save all solutions
 			self.solutions.append(solution)
 			
 		elif self.savesolutions > 0:
@@ -88,7 +88,7 @@ class Control:
 				
 		return solution
 		
-	def cplex_infeasibilityanalysis(ocp):
+	def cplex_infeasibilityanalysis(self,ocp):
 		"""
 		Give information about infeasible constraints in cplex
 		

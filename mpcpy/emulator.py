@@ -51,15 +51,24 @@ class Emulator:
 		
 		# remove the initial conditions and parameters which are not in the results file
 		redosim = False
+		keystoremove = []
 		for key in self.initial_conditions:
 			if not key in res:
-				del self.initial_conditions[key]
+				keystoremove.append(key)
 				redosim = True
 				
+		for key in keystoremove:
+			del self.initial_conditions[key]
+				
+		keystoremove = []		
 		for key in self.parameters:
 			if not key in res:
-				del self.parameters[key]
-				redosim = True	
+				keystoremove.append(key)
+				redosim = True
+				
+		for key in keystoremove:
+			del self.parameters[key]
+
 		
 		# redo the simulation if required
 		if redosim:
@@ -147,3 +156,34 @@ class Emulator:
 					self.res[key] = np.append(self.res[key][:-1],np.interp(input['time'],res['time'],res[key]))
 			else:
 				self.res[key] = np.interp(input['time'],res['time'],res[key])
+				
+				
+				
+				
+				
+class Nodymola():
+	"""
+	A class with the required methods to test things when Dymola is not available
+	"""
+	def __init__():
+		pass
+	def openModel(self,filename):
+		pass
+	def clear(self):
+		pass
+	def compile(self,modelname,parameters=None):
+		pass
+	def simulate(self,StartTime=0,StopTime=1,OutputInterval=0,NumberOfIntervals=500,Tolerance=1e-4,FixedStepSize=0,Algorithm='dassl'):
+		pass
+	def set_parameters(self,pardict):
+		pass
+	def get_result(self):
+		return {}
+	def write_dsu(self,inputdict):
+		pass
+	def get_res(self,par):
+		return []
+	def dsfinal2dsin(self):
+		pass
+	def run_cmd(self,cmd):
+		pass
