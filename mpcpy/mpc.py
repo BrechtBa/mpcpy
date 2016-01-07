@@ -22,7 +22,7 @@ import numpy as np
 
 class MPC:
 
-	def __init__(self,emulator,control,boundaryconditions,emulationtime=7*24*3600,resulttimestep=600,plotfunction=None):
+	def __init__(self,emulator,control,boundaryconditions,emulationtime=7*24*3600,resulttimestep=600,nextstepcalculator=None,plotfunction=None):
 		"""
 		Arguments:
 		emulator:     			an mpcpy.Emulator object
@@ -37,6 +37,13 @@ class MPC:
 
 		self.emulationtime = emulationtime
 		self.resulttimestep = resulttimestep
+		
+		if nextstepcalculator == None:
+			def nextstepcalculator(controlsolution):
+				return 1
+
+		self.nextstepcalculator = nextstepcalculator
+			
 		self.plotfunction = plotfunction
 		
 		self.res = {}
@@ -67,12 +74,16 @@ class MPC:
 		#sys.stdout.flush()
 		#sys.stdout.write('\b' * (barwidth+1))
 		
-
 		while starttime < self.emulationtime:
-			# create time vector
-			time = np.arange(starttime,starttime+self.control.receding+0.01*self.resulttimestep,self.resulttimestep,dtype=np.float)
-			boundaryconditions = self.boundaryconditions(time)
+		
+			# calculate control signals for the control horizon
 			control = self.control(starttime)
+			
+			# create a simulation time vector
+			nextStep = self.nextstepcalculator(control)
+			time = np.arange(starttime,min(self.emulationtime,starttime+nextStep*self.control.receding)+0.01*self.resulttimestep,self.resulttimestep,dtype=np.float)
+
+			boundaryconditions = self.boundaryconditions(time)
 			
 			# create input of all controls and the required boundary conditions
 			# add times at the control time steps minus 1e-6 time the result time step to achieve zero order hold
@@ -97,7 +108,7 @@ class MPC:
 			
 			# update starting time
 			starttime = self.emulator.res['time'][-1]
-			
+
 			# update the progress bar
 			if starttime/self.emulationtime*barwidth >= barvalue:
 				addbars = int(round(starttime/self.emulationtime*barwidth-barvalue))

@@ -41,7 +41,7 @@ class Emulator:
 	def initialize(self):
 		self.dymola.set_parameters(self.initial_conditions)
 		self.dymola.set_parameters(self.parameters)
-		
+	
 		# clear the result dict
 		self.res = {}
 		
@@ -68,15 +68,15 @@ class Emulator:
 				
 		for key in keystoremove:
 			del self.parameters[key]
-
 		
 		# redo the simulation if required
 		if redosim:
 			self.dymola.set_parameters(self.initial_conditions)
+			
 			self.dymola.set_parameters(self.parameters)
 			self.dymola.simulate(StartTime=0,StopTime=self.initializationtime)
 			res = self.dymola.get_result()
-		
+			
 		
 		for key in res:
 			self.res[key] = np.array([res[key][0]])
@@ -93,7 +93,7 @@ class Emulator:
 				self.initial_conditions[key] = ini[key][-1];
 			except:
 				self.initial_conditions[key] = ini[key];
-				
+		
 	def set_parameters(self,par):
 		"""
 		Arguments:
@@ -165,7 +165,7 @@ class Nodymola():
 	"""
 	A class with the required methods to test things when Dymola is not available
 	"""
-	def __init__():
+	def __init__(self):
 		pass
 	def openModel(self,filename):
 		pass
