@@ -38,7 +38,7 @@ class Control:
 		self.timestep = timestep
 		self.receding = receding
 		self.parameters = parameters
-		self.solution = self.formulation()
+		self.solution = None
 		
 		self.savesolutions = savesolutions
 		self.solutions = []
@@ -71,6 +71,10 @@ class Control:
 		Arguments:
 		starttime:       real start time of the control horizon
 		"""
+		
+		# formulate the ocp during the first call
+		if self.solution == None:
+			self.solution = self.formulation()
 		
 		state = self.stateestimation(starttime)
 		prediction = self.prediction(self.time(starttime))
