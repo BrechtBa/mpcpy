@@ -81,8 +81,9 @@ class MPC:
 			
 			# create a simulation time vector
 			nextStep = self.nextstepcalculator(control)
-			time = np.arange(starttime,min(self.emulationtime,starttime+nextStep*self.control.receding)+0.01*self.resulttimestep,self.resulttimestep,dtype=np.float)
-
+			time = np.arange(starttime,min(self.emulationtime+self.resulttimestep,starttime+nextStep*self.control.receding+0.01*self.resulttimestep),self.resulttimestep,dtype=np.float)
+			time[-1] = min(time[-1],self.emulationtime)
+			
 			boundaryconditions = self.boundaryconditions(time)
 			
 			# create input of all controls and the required boundary conditions
