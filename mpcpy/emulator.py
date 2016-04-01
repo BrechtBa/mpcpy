@@ -101,7 +101,7 @@ class Emulator:
 		"""
 		self.parameters = par
 		
-	def __call__(self,input):
+	def __call__(self,time,input):
 		"""
 		Calculate values of the system variables for the length of the inputs
 		Uses the value of _state as starting point and sets the value at the end of the simulation
@@ -113,7 +113,7 @@ class Emulator:
 		em = Emulator()
 		t  = np.arange(0.,3600.1,600.)
 		u1 = 5.*np.ones_like(t)
-		em(t,['u1':u1])
+		em(t,['time':t,'u1':u1])
 		"""
 		
 		# simulation
@@ -124,7 +124,7 @@ class Emulator:
 			pass
 		
 		try:
-			self.dymola.simulate(StartTime=input['time'][0],StopTime=input['time'][-1],Tolerance=0.0001)
+			self.dymola.simulate(StartTime=time[0],StopTime=time[-1],Tolerance=0.0001)
 		except:
 			print('Ignoring error during simulation at time {}'.format(input['time'][0]));
 			
@@ -142,25 +142,34 @@ class Emulator:
 					if len(input[key]) == 1:
 						self.res[key] = input[key]
 					else:
-						self.res[key] = np.append(self.res[key][:-1],np.interp(input['time'],input['time'],input[key]))
+						self.res[key] = np.append(self.res[key][:-1],interp_averaged(time,input['time'],input[key]))
 				else:
-					self.res[key] = np.interp(input['time'],input['time'],input[key])
+					self.res[key] = interp_averaged(time,input['time'],input[key])
 		
-		# interpolate results to the input points in time	
+		# interpolate results to the input points in time
 		for key in res.keys():
 			if key in self.res:
 				# append the result
 				if len(res[key]) == 1:
 					self.res[key] = res[key]
 				else:
-					self.res[key] = np.append(self.res[key][:-1],np.interp(input['time'],res['time'],res[key]))
+					if key == 'time':
+						self.res[key] = np.append(self.res[key][:-1],time)
+					else:
+						self.res[key] = np.append(self.res[key][:-1],interp_averaged(time,res['time'],res[key]))
 			else:
-				self.res[key] = np.interp(input['time'],res['time'],res[key])
-				
-				
-				
-				
-				
+				self.res[key] = interp_averaged(time,res['time'],res[key])
+			
+			
+def interp_averaged(t,tp,yp):
+	y = np.zeros_like(t)
+	for i in range(len(t)-1):
+		y[i] = np.mean(yp[np.where( (tp>=t[i]) & (tp<t[i+1]) )])
+		
+	y[-1] = np.interp(t[-1],tp,yp)
+	
+	return y
+
 class Nodymola():
 	"""
 	A class with the required methods to test things when Dymola is not available

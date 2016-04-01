@@ -101,7 +101,7 @@ class MPC:
 					input[key] = interp_zoh(input['time'],control['time'],control[key])
 
 			# prepare and run the simulation
-			self.emulator(input)
+			self.emulator(time,input)
 			
 			# plot results
 			if self.plotfunction:
