@@ -112,3 +112,102 @@ class Control:
 						print( 'Linear constraint {}: {}'.format(c[1],ocp.linear_constraints.get_names(c[1])) )
 					else:
 						print(ocp.conflict.get_groups(conflict))
+						
+						
+
+def state_equation_collocation(derivative_coefficients,variable_coefficients,disturbance_coefficients,disturbances,zoh=[]):
+	"""
+	calculates the coefficients of a central discrete difference equation through collocation
+	
+	Arguments:
+	derivative_coefficient:		dict, the coefficient of the variable which is derived on the lhs
+	variable_coefficients: 		dict, the coefficient of the non derived variables on the rhs
+	disturbance_coefficients:	dict, the coefficient of the distrubances on the rhs					
+	disturbances:  				dict, the values of the distrubances, including a time vector
+	zoh = []:    				list of strings, list of variables or disturbances for which the value is assumed to be constant over the discretization interval
+
+	Returns:
+	coefficients:     list of dicts, indexed variable names and coefficients at all timesteps but the last
+	right_hand_side:  list of floats, the right hand side of the discretized equation at all timesteps but the last
+	
+	Example:
+	expression = 'C*dT/dt = UA*(T_amb-T) + Q'
+	C = 500e3
+	UA = 100
+	time = np.arange(0,24.1)*3600
+	state_equation_collocation({'T':C},{'T':-UA,'Q':1.},{'T_amb':UA},{'time':time,'T_amb':5.*np.ones_like(time)})
+	"""
+	
+	coefficients = []
+	righthandside = []
+	
+	for i in range(len(disturbances['time'])-1):
+		dt = disturbances['time'][i+1]-disturbances['time'][i]
+		
+		temp_coefficients = {}
+		temp_righthandside = 0
+
+		# check inputs
+		if not len(derivative_coefficient) == 1:
+			raise ValueError('derivative_coefficient can only have one key')
+		
+		# calculate coefficients	
+		for key in derivative_coefficient:
+			temp_coefficients[ key+'[{}]'.format(i) ] = -derivative_coefficient[key]/dt
+			temp_coefficients[ key+'[{}]'.format(i+1) ] = derivative_coefficient[key]/dt
+
+		for key in variable_coefficients:
+			if key in zoh:
+				tempkey = key+'[{}]'.format(i)
+				if not tempkey in temp_coefficients:
+					temp_coefficients[ tempkey ] = 0
+					
+				temp_coefficients[ tempkey ] = temp_coefficients[ tempkey ] - variable_coefficients[key]
+				
+			else:
+				tempkey = key+'[{}]'.format(i)
+				if not tempkey in temp_coefficients:
+					temp_coefficients[ tempkey ] = 0
+					
+				temp_coefficients[ tempkey ] = temp_coefficients[ tempkey ] - 0.5*variable_coefficients[key]
+		
+				tempkey = key+'[{}]'.format(i+1)
+				if not tempkey in temp_coefficients:
+					temp_coefficients[ tempkey ] = 0
+					
+				temp_coefficients[ tempkey ] = temp_coefficients[ tempkey ] - 0.5*variable_coefficients[key]
+		
+		# calculate rhs					
+		for key in disturbance_coefficients:
+			if key in zoh:	
+				temp_righthandside = temp_righthandside + disturbance_coefficients[key]*disturbance_values[key][i]
+			else:
+				temp_righthandside = temp_righthandside + disturbance_coefficients[key]*(0.5*disturbance_values[key][i]+0.5*disturbance_values[key][i+1])
+
+
+		coefficients.append(temp_coefficients)
+		righthandside.append(temp_righthandside)
+				
+	return (coefficients,righthandside)
+			
+			
+					
+def parse_state_equation(expression,variables,coeffients,indices):
+	"""
+	parses a state differential equation
+	
+	Arguments:
+	expression:    string, a string form of the continuous time differential equation
+	variables:     list, a list of strings with the variable names
+	coeffients:    dict, values for the coefficients
+	disturbances:  dict, values for the disturbances
+	indices:       list, a list of indices
+	
+	Example:
+	parse_state_equation( 'C*dT/dt = UA*(T_amb-T) + Q', ['T','Q'], {'C':500e3,'UA':100}, {'T_amb':np.zeros(25)}, range(24) )
+	"""
+	
+	pass
+	
+	
+
