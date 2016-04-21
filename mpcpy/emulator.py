@@ -21,7 +21,7 @@ import sys
 import numpy as np
 
 class Emulator:
-	def __init__(self,dymola,inputs,initializationtime = 1):
+	def __init__(self,dymola,inputs,initializationtime=1):
 		"""
 		Initialize a dympy object for use as an MPC emulation
 		
@@ -107,7 +107,8 @@ class Emulator:
 		Uses the value of _state as starting point and sets the value at the end of the simulation
 		
 		Arguments:
-		inputs: dictionary with values for the inputs of the model, time must be a part of it
+		time: numpy array, times at which the results are requested
+		inputs: dict, dictionary with values for the inputs of the model, time must be a part of it
 		
 		Example:
 		em = Emulator()
@@ -133,6 +134,7 @@ class Emulator:
 		except:
 			print('Ignoring error while loading dymola res file at time {}'.format(input['time'][0]));
 		
+		
 		# adding the inputs to the result
 		for key in input.keys():
 			# make sure not to do double adding
@@ -142,9 +144,9 @@ class Emulator:
 					if len(input[key]) == 1:
 						self.res[key] = input[key]
 					else:
-						self.res[key] = np.append(self.res[key][:-1],interp_averaged(time,input['time'],input[key]))
+						self.res[key] = np.append(self.res[key][:-1],np.interp(time,input['time'],input[key]))
 				else:
-					self.res[key] = interp_averaged(time,input['time'],input[key])
+					self.res[key] = np.interp(time,input['time'],input[key])
 		
 		# interpolate results to the input points in time
 		for key in res.keys():
@@ -156,9 +158,10 @@ class Emulator:
 					if key == 'time':
 						self.res[key] = np.append(self.res[key][:-1],time)
 					else:
-						self.res[key] = np.append(self.res[key][:-1],interp_averaged(time,res['time'],res[key]))
+						self.res[key] = np.append(self.res[key][:-1],np.interp(time,res['time'],res[key]))
+						
 			else:
-				self.res[key] = interp_averaged(time,res['time'],res[key])
+				self.res[key] = np.interp(time,res['time'],res[key])
 			
 			
 def interp_averaged(t,tp,yp):

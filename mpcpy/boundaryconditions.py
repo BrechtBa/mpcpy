@@ -33,7 +33,7 @@ class Boundaryconditions:
 		
 		# create a new time vector including the extra time
 		# this method is about 2 times faster than figuring out the correct time during interpolation
-		ind = np.where( bcs['time']-bcs['time'][0] < extra_time )
+		ind = np.where( bcs['time']-bcs['time'][0] < extra_time )[0]
 		self.data['time'] = np.concatenate((bcs['time'],bcs['time'][ind]+bcs['time'][-1]+(bcs['time'][1]-bcs['time'][0]) -bcs['time'][0] ))
 		
 		if periodic:
