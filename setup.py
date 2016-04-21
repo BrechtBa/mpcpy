@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='mpcpy',
-    version='0.0.1',
+    version='0.0.2',
     license='GNU GENERAL PUBLIC LICENSE',
 	description='A package to run mpc simulations in Python with Dymola or other simulation packages',
 	url='https://github.com/BrechtBa/mpcpy',
