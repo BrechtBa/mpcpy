@@ -1,5 +1,5 @@
-#!/usr/bin/python
-######################################################################################
+#!/usr/bin/env python
+################################################################################
 #    Copyright 2015 Brecht Baeten
 #    This file is part of mpcpy.
 #
@@ -15,7 +15,7 @@
 #
 #    You should have received a copy of the GNU General Public License
 #    along with mpcpy.  If not, see <http://www.gnu.org/licenses/>.
-######################################################################################
+################################################################################
 
 import sys
 import numpy as np
@@ -161,7 +161,10 @@ class Emulator:
 						self.res[key] = np.append(self.res[key][:-1],np.interp(time,res['time'],res[key]))
 						
 			else:
-				self.res[key] = np.interp(time,res['time'],res[key])
+				if len(res[key]) == 1:
+					self.res[key] = res[key]
+				else:
+					self.res[key] = np.interp(time,res['time'],res[key])
 			
 			
 def interp_averaged(t,tp,yp):

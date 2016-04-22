@@ -1,5 +1,5 @@
-#!/usr/bin/python
-######################################################################################
+#!/usr/bin/env python
+################################################################################
 #    Copyright 2015 Brecht Baeten
 #    This file is part of mpcpy.
 #
@@ -15,7 +15,7 @@
 #
 #    You should have received a copy of the GNU General Public License
 #    along with mpcpy.  If not, see <http://www.gnu.org/licenses/>.
-######################################################################################
+################################################################################
 
 import sys
 import numpy as np

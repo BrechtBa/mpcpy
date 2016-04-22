@@ -1,5 +1,5 @@
-#!/usr/bin/python
-######################################################################################
+#!/usr/bin/env python
+################################################################################
 #    Copyright 2015 Brecht Baeten
 #    This file is part of mpcpy.
 #
@@ -15,13 +15,13 @@
 #
 #    You should have received a copy of the GNU General Public License
 #    along with mpcpy.  If not, see <http://www.gnu.org/licenses/>.
-######################################################################################
+################################################################################
 
 import sys
 import numpy as np
 
 class Boundaryconditions:
-	def __init__(self,bcs,periodic=True,extra_time=7*24*3600):
+	def __init__(self,bcs,periodic=True,extra_time=7*24*3600.):
 		"""
 		Arguments:
 		bcs:     		dict, actual boundary conditions and a time vector
@@ -34,19 +34,19 @@ class Boundaryconditions:
 		# create a new time vector including the extra time
 		# this method is about 2 times faster than figuring out the correct time during interpolation
 		ind = np.where( bcs['time']-bcs['time'][0] < extra_time )[0]
-		self.data['time'] = np.concatenate((bcs['time'],bcs['time'][ind]+bcs['time'][-1]+(bcs['time'][1]-bcs['time'][0]) -bcs['time'][0] ))
+		self.data['time'] = np.concatenate((bcs['time'][:-1],bcs['time'][ind]+bcs['time'][-1]-bcs['time'][0] ))
 		
 		if periodic:
 			# the values at time lower than extra_time are repeated at the end of the dataset
 			# extra_time should thus be larger than the control horizon
 			for key in bcs:
 				if key != 'time':
-					self.data[key] =  np.concatenate((bcs[key],bcs[key][ind]))
+					self.data[key] =  np.concatenate((bcs[key][:-1],bcs[key][ind]))
 		else:
 			# last value is repeated after the actual data
 			for key in bcs:
 				if key != 'time':
-					self.data[key] =  np.concatenate((bcs[key],bcs[key][-1]*np.ones(len(ind))))
+					self.data[key] =  np.concatenate((bcs[key][:-1],bcs[key][-1]*np.ones(len(ind))))
 		
 	def __call__(self,time):
 		"""
