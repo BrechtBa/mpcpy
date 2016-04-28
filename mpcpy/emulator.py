@@ -21,7 +21,7 @@ import sys
 import numpy as np
 
 class Emulator:
-	def __init__(self,dymola,inputs,initializationtime=1):
+	def __init__(self,dymola,inputs,initializationtime=1,**kwargs):
 		"""
 		Initialize a dympy object for use as an MPC emulation
 		
@@ -37,6 +37,13 @@ class Emulator:
 		self.initial_conditions = {}
 		self.parameters = {}
 		self.res = {}
+		
+		# check for additional dymola arguments
+		self.simulation_args = {}
+		for key in kwargs:
+			if key in ['OutputInterval','NumberOfIntervals','Tolerance','FixedStepSize','Algorithm']:
+				self.simulation_args[key] = kwargs[key]
+				
 		
 	def initialize(self):
 		self.dymola.set_parameters(self.initial_conditions)
@@ -125,7 +132,7 @@ class Emulator:
 			pass
 		
 		try:
-			self.dymola.simulate(StartTime=time[0],StopTime=time[-1],Tolerance=0.0001)
+			self.dymola.simulate(StartTime=time[0],StopTime=time[-1],**self.simulation_args)
 		except:
 			print('Ignoring error during simulation at time {}'.format(input['time'][0]));
 			
