@@ -58,8 +58,14 @@ class Boundaryconditions:
 		
 		bcs_int = {}
 		for key in self.data:
-			bcs_int[key] = np.interp(time,self.data['time'],self.data[key])
-		
+			try:
+				bcs_int[key] = np.interp(time,self.data['time'],self.data[key])
+			except:
+				# 2d boundary conditions support
+				bcs_int[key] = np.zeros((len(time),self.data[key].shape[1]))
+				for j in range(self.data[key].shape[1]):
+					bcs_int[key][:,j] = np.interp(time,self.data['time'],self.data[key][:,j])
+					
 		return bcs_int
 	
 	def __getitem__(self,key):
