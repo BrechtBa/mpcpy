@@ -20,7 +20,7 @@
 import sys
 import numpy as np
 
-class Control:
+class Control(object):
 	"""
 	Base class for defining the control for an mpc
 	the "formulation" method must be redefined in a child class

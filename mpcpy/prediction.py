@@ -20,7 +20,7 @@
 import sys
 import numpy as np
 
-class Prediction:
+class Prediction(object):
 	"""
 	Base class for defining the predictions for an mpc
 	the "prediction" method must be redefined in a child class

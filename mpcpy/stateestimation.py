@@ -20,7 +20,7 @@
 import sys
 import numpy as np
 
-class Stateestimation:
+class Stateestimation(object):
 	"""
 	Base class for defining the state estimation for an mpc
 	the "stateestimation" method must be redefined in a child class

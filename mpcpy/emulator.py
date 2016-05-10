@@ -20,7 +20,7 @@
 import sys
 import numpy as np
 
-class Emulator:
+class Emulator(object):
 	def __init__(self,dymola,inputs,initializationtime=1,**kwargs):
 		"""
 		Initialize a dympy object for use as an MPC emulation

@@ -20,7 +20,7 @@
 import sys
 import numpy as np
 
-class Boundaryconditions:
+class Boundaryconditions(object):
 	def __init__(self,bcs,periodic=True,extra_time=7*24*3600.):
 		"""
 		Arguments:

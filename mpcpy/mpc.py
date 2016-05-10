@@ -20,7 +20,7 @@
 import sys
 import numpy as np
 
-class MPC:
+class MPC(object):
 
 	def __init__(self,emulator,control,boundaryconditions,emulationtime=7*24*3600,resulttimestep=600,nextstepcalculator=None,plotfunction=None):
 		"""
