@@ -38,10 +38,11 @@ class Control:
 		self.timestep = timestep
 		self.receding = receding
 		self.parameters = parameters
-		self.solution = None
 		
 		self.savesolutions = savesolutions
 		self.solutions = []
+		
+		self._formulated = False
 		
 	def time(self,starttime):
 		"""
@@ -52,18 +53,25 @@ class Control:
 
 	def formulation(self):
 		"""
-		function that returns a callable function which solves the optimal control problem
-		the returned function has the current state and the predictions as inputs and returns a dict with "the plan"
-		Should be redefined in a child class to contain the actual control algorithm
+		Performs actions the first time the control is run.
+		Can be used to set up an optimal control problem. The set-up and
+		solution are separated as sometimes the set-up takes a significant
+		amount of time and performs actions which must not be repeated.
+		
+		Can be redefined in a child class to set up the actual control algorithm
+		"""
+		pass
+		
+	def solution(self,state,prediction):
+		"""
+		Returns the control profiles ("the plan")
+		
+		Should be redefined in a child class to set up the actual control algorithm
 		"""
 		
-		control_parameters = self.control_parameters
+		sol = {}
+		return sol
 		
-		def solution(state,prediction):
-			sol = {}
-			sol['time'] = prediction['time']
-			
-		return solution
 	
 	def __call__(self,starttime):
 		"""
@@ -72,13 +80,22 @@ class Control:
 		starttime:       real start time of the control horizon
 		"""
 		
-		# formulate the ocp during the first call
-		if self.solution == None:
-			self.solution = self.formulation()
-		
+		# get the state and the predictions
 		state = self.stateestimation(starttime)
 		prediction = self.prediction(self.time(starttime))
-		solution = self.solution(state,prediction)
+		
+		# formulate the ocp during the first call
+		if not self._formulated:
+			tempsolution = self.formulation()
+			if tempsolution != None:
+				print('Warning: returning a solution function from the formulation method is depreciated. Create a separate solution method.')
+				self.solution = tempsolution
+
+			self._formulated = True
+		
+		# solve the ocp	
+		solution = self.solution(state,prediction)	
+
 		
 		if self.savesolutions == -1:
 			# save all solutions
