@@ -21,13 +21,154 @@ import sys
 import numpy as np
 
 class Emulator(object):
+    """
+    Base class for defining an emulator object
+    """
+    def __init__(self,inputs):
+        """
+        Redifine in a child class
+        
+        Initializes the emulator object
+        :code`self.inputs` and :code`self.res` attributes must be defined
+        
+        Parameters
+        ----------
+        inputs : list of strings
+            list of strings of the inputs. This is done so that not all data
+            from the boundary conditions and control signals have to be
+            transferred to the simulation. Only the boundary conditions and 
+            control signals in the :code`inputs` attribute are interpolated and
+            passed to the :code`__call__` method.
+            
+        """
+        
+        self.inputs = inputs
+        self.res = {}
+
+        
+    def initialize(self):
+        """
+        Redefine in a child class
+        
+        This method is called once before the start of the MPC
+        
+        """
+        
+        self.res = {}
+        
+        
+    def simulate(self,starttime,stoptime,input):
+        """
+        Redefine in a child class
+        
+        This method runs the simulation and sould return a dictionary with
+        results for times between the starttime and stoptime given the inputs
+        
+        
+        Parameters
+        ----------
+        starttime : number
+            time to start the simulation
+            
+        stoptime : number
+            time to stop the simulation
+        
+        input : dict
+            dictionary with values for the inputs for the simulation, 'time'
+            and all values in self.inputs must be keys
+            
+        Returns
+        -------
+        res: dict
+            dictionary with the simulation results
+            
+        """
+        
+        return {}
+
+        
+    def __call__(self,time,input):
+        """
+        Calculate values of the system variables for the length of the inputs
+        Uses the value of _state as starting point and sets the value at the end of the simulation
+        
+        Parameters
+        ----------
+        time : numpy array
+            times at which the results are requested
+            
+        inputs : dict
+            dictionary with values for the inputs of the model, time must be a
+            part of it
+        
+        Examples
+        --------
+        >>> em = Emulator(['u1'])
+        >>> t  = np.arange(0.,3600.1,600.)
+        >>> u1 = 5.*np.ones_like(t)
+        >>> em(t,['time':t,'u1':u1])
+        
+        """
+        
+        res = self.simulate(time[0],time[-1],input)
+        
+        # adding the inputs to the result
+        for key in input.keys():
+            # make sure not to do double adding
+            if not key in res.keys():
+                if key in self.res:
+                    # append the result
+                    if len(input[key]) == 1:
+                        self.res[key] = input[key]
+                    else:
+                        self.res[key] = np.append(self.res[key][:-1],np.interp(time,input['time'],input[key]))
+                else:
+                    self.res[key] = np.interp(time,input['time'],input[key])
+        
+        # interpolate results to the input points in time
+        for key in res.keys():
+            if key in self.res:
+                # append the result
+                if len(res[key]) == 1:
+                    self.res[key] = res[key]
+                else:
+                    if key == 'time':
+                        self.res[key] = np.append(self.res[key][:-1],time)
+                    else:
+                        self.res[key] = np.append(self.res[key][:-1],np.interp(time,res['time'],res[key]))
+                        
+            else:
+                if len(res[key]) == 1:
+                    self.res[key] = res[key]
+                else:
+                    self.res[key] = np.interp(time,res['time'],res[key])
+                
+
+                
+class DympyEmulator(Emulator):
+    """
+    A class defining an emulator object using dympy for the simulation
+    
+    """
+    
     def __init__(self,dymola,inputs,initializationtime=1,**kwargs):
         """
         Initialize a dympy object for use as an MPC emulation
         
-        Arguments:
-        dymola: a dympy object with an opened and compiled dymola model
-        inputs: a list of strings of the variable names of the inputs
+        Parameters
+        ----------
+        dymola : dympy.Dymola
+            a dympy object with an opened and compiled dymola model
+            
+        inputs : list of strings
+            a list of strings of the variable names of the inputs
+        
+        initializationtime : number
+            time to run the initialization simulation
+            
+        **kwargs : 
+            arguments which can be passed on to dympy
+            
         """
         
         self.inputs = inputs
@@ -46,6 +187,17 @@ class Emulator(object):
                 
         
     def initialize(self):
+        """
+        initializes the dympy model, by simulating it for 
+        :code`self.initializationtime`. Afterwards the :code`res` attribute is
+        populated
+        
+        Also, the keys in parameters and initialconditions are checked. If they
+        do not appear in the dympy results, they are removed and the model is
+        reinitialized.
+        
+        """
+        
         self.dymola.set_parameters(self.initial_conditions)
         self.dymola.set_parameters(self.parameters)
     
@@ -91,35 +243,36 @@ class Emulator(object):
                 
     def set_initial_conditions(self,ini):
         """
-        Arguments:
-        ini    dictionary with initial conditions
+        Parameters
+        ----------
+        ini : dict
+            dictionary with initial conditions
+            
         """
+        
         # set only the last value for each key
         for key in ini:
             try:
-                self.initial_conditions[key] = ini[key][-1];
+                self.initial_conditions[key] = ini[key][-1]
             except:
-                self.initial_conditions[key] = ini[key];
+                self.initial_conditions[key] = ini[key]
+        
         
     def set_parameters(self,par):
         """
-        Parameters:
-            par    dictionary with parameters
+        Parameters
+        ----------
+        par : dict
+            dictionary with parameters
+            
         """
         self.parameters = par
     
+    
     def simulate(self,starttime,stoptime,input):
         """
-        Method which performs the simulation
-        
-        Parameters:
-            time:       numpy array, times at which the results are requested
-            inputs:     dict, dictionary with values for the inputs of the model, 'time' must be a key
-
-        Returns:
-            res:        dict, dictionary with the simulation results, 'time' must be a key
         """
-        # simulation
+        
         self.dymola.write_dsu(input)
         try:
             self.dymola.dsfinal2dsin()
@@ -138,91 +291,7 @@ class Emulator(object):
     
         return res
     
-    def __call__(self,time,input):
-        """
-        Calculate values of the system variables for the length of the inputs
-        Uses the value of _state as starting point and sets the value at the end of the simulation
-        
-        Parameters:
-            time:       numpy array, times at which the results are requested
-            inputs:     dict, dictionary with values for the inputs of the model, time must be a part of it
-        
-        Example::
-            em = Emulator()
-            t  = np.arange(0.,3600.1,600.)
-            u1 = 5.*np.ones_like(t)
-            em(t,['time':t,'u1':u1])
-        """
-        
-        res = self.simulate(time[0],time[-1],input)
-        
-        # adding the inputs to the result
-        for key in input.keys():
-            # make sure not to do double adding
-            if not key in res.keys():
-                if key in self.res:
-                    # append the result
-                    if len(input[key]) == 1:
-                        self.res[key] = input[key]
-                    else:
-                        self.res[key] = np.append(self.res[key][:-1],np.interp(time,input['time'],input[key]))
-                else:
-                    self.res[key] = np.interp(time,input['time'],input[key])
-        
-        # interpolate results to the input points in time
-        for key in res.keys():
-            if key in self.res:
-                # append the result
-                if len(res[key]) == 1:
-                    self.res[key] = res[key]
-                else:
-                    if key == 'time':
-                        self.res[key] = np.append(self.res[key][:-1],time)
-                    else:
-                        self.res[key] = np.append(self.res[key][:-1],np.interp(time,res['time'],res[key]))
-                        
-            else:
-                if len(res[key]) == 1:
-                    self.res[key] = res[key]
-                else:
-                    self.res[key] = np.interp(time,res['time'],res[key])
-            
-
-            
-            
-            
-class OpenloopEmulator(Emulator):
-    def __init__(self,inputs,initializationtime=1,**kwargs):
-        """
-        Initialize a open loop emulator object for use as an MPC emulation
-        
-        Arguments:
-        inputs: a list of strings of the variable names of the inputs
-        """
-        
-        self.inputs = inputs
-        self.initializationtime = initializationtime
-        
-        self.initial_conditions = {}
-        self.parameters = {}
-        self.res = {}
-                
-                
-    def initialize(self):
-        # clear the result dict
-        self.res = self.simulate(0.,self.initializationtime,None)
-        
-        # add the initial conditions to the result
-        for key in self.initial_conditions:
-            self.res[key] = np.array([self.initial_conditions[key]])
-         
-    def simulate(self,starttime,stoptime,input):
-        """
-        redefine this function in a child class if required
-        """
-        return {}
-                
-                
+    
             
 def interp_averaged(t,tp,yp):
     y = np.zeros_like(t)

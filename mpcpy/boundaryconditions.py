@@ -21,52 +21,82 @@ import sys
 import numpy as np
 
 class Boundaryconditions(object):
-	def __init__(self,bcs,periodic=True,extra_time=7*24*3600.):
-		"""
-		Arguments:
-		bcs:     		dict, actual boundary conditions and a time vector
-		periodic:    	boolean, determines how to determine values when time is larger then the boundary conditions time
-		extra_time: 	float, maximum allowed time outside the boundary conditions time
-		"""
-		
-		self.data = {}
-		
-		# create a new time vector including the extra time
-		# this method is about 2 times faster than figuring out the correct time during interpolation
-		ind = np.where( bcs['time']-bcs['time'][0] < extra_time )[0]
-		self.data['time'] = np.concatenate((bcs['time'][:-1],bcs['time'][ind]+bcs['time'][-1]-bcs['time'][0] ))
-		
-		if periodic:
-			# the values at time lower than extra_time are repeated at the end of the dataset
-			# extra_time should thus be larger than the control horizon
-			for key in bcs:
-				if key != 'time':
-					self.data[key] =  np.concatenate((bcs[key][:-1],bcs[key][ind]))
-		else:
-			# last value is repeated after the actual data
-			for key in bcs:
-				if key != 'time':
-					self.data[key] =  np.concatenate((bcs[key][:-1],bcs[key][-1]*np.ones(len(ind))))
-		
-	def __call__(self,time):
-		"""
-		Return the interpolated boundary conditions
-		
-		Arguments:
-		time:   true value for time
-		"""
-		
-		bcs_int = {}
-		for key in self.data:
-			try:
-				bcs_int[key] = np.interp(time,self.data['time'],self.data[key])
-			except:
-				# 2d boundary conditions support
-				bcs_int[key] = np.zeros((len(time),self.data[key].shape[1]))
-				for j in range(self.data[key].shape[1]):
-					bcs_int[key][:,j] = np.interp(time,self.data['time'],self.data[key][:,j])
-					
-		return bcs_int
-	
-	def __getitem__(self,key):
-		return self.data[key]
+    """
+    A class to define boundaryconditions in the format required by mpcpy
+    
+    Examples
+    --------
+    >>> bcs = Boundaryconditions({'time': np.arange(0.,24*3600.+1,3600.), 'T_amb':np.random.random(25)})
+    >>> bcs(12.1*3600)
+    
+    """
+    
+    def __init__(self,bcs,periodic=True,extra_time=7*24*3600.):
+        """
+        Create a boundatryconditions object
+        
+        Parameters
+        ----------
+        bcs : dict
+            actual boundary conditions and a time vector
+            
+        periodic : boolean
+            determines how to determine values when time is larger than the
+            boundary conditions time
+            
+        extra_time : float
+            maximum allowed time outside the boundary conditions time, should be
+            at least as large as the control horizon
+            
+        """
+        
+        self.data = {}
+        
+        # create a new time vector including the extra time
+        # this method is about 2 times faster than figuring out the correct time during interpolation
+        ind = np.where( bcs['time']-bcs['time'][0] < extra_time )[0]
+        self.data['time'] = np.concatenate((bcs['time'][:-1],bcs['time'][ind]+bcs['time'][-1]-bcs['time'][0] ))
+        
+        if periodic:
+            # the values at time lower than extra_time are repeated at the end of the dataset
+            # extra_time should thus be larger than the control horizon
+            for key in bcs:
+                if key != 'time':
+                    self.data[key] =  np.concatenate((bcs[key][:-1],bcs[key][ind]))
+        else:
+            # last value is repeated after the actual data
+            for key in bcs:
+                if key != 'time':
+                    self.data[key] =  np.concatenate((bcs[key][:-1],bcs[key][-1]*np.ones(len(ind))))
+        
+        
+    def __call__(self,time):
+        """
+        Return the interpolated boundary conditions
+        
+        Parameters
+        ----------
+        time : number or np.array
+            true value for time
+        
+        Returns
+        -------
+        bcs_int : dict
+            ditionary with interpolated boundary conditions
+            
+        """
+        
+        bcs_int = {}
+        for key in self.data:
+            try:
+                bcs_int[key] = np.interp(time,self.data['time'],self.data[key])
+            except:
+                # 2d boundary conditions support
+                bcs_int[key] = np.zeros((len(time),self.data[key].shape[1]))
+                for j in range(self.data[key].shape[1]):
+                    bcs_int[key][:,j] = np.interp(time,self.data['time'],self.data[key][:,j])
+                    
+        return bcs_int
+    
+    def __getitem__(self,key):
+        return self.data[key]
