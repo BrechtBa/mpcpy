@@ -110,23 +110,23 @@ class MPC(object):
             time = np.arange(starttime,min(self.emulationtime+self.resulttimestep,starttime+nextStep*self.control.receding+0.01*self.resulttimestep),self.resulttimestep,dtype=np.float)
             time[-1] = min(time[-1],self.emulationtime)
             
-            # interpolate the boundary conditions
-            boundaryconditions = self.boundaryconditions(time)
-            
             # create input of all controls and the required boundary conditions
             # add times at the control time steps minus 1e-6 times the result time step to achieve zero order hold
             ind = np.where((control['time']-1e-6*self.resulttimestep > time[0]) & (control['time']-1e-6*self.resulttimestep <= time[-1]))
             inputtime = np.sort(np.concatenate((time, control['time'][ind]-1e-6*self.resulttimestep)))
             input = {'time': inputtime}
             
-            for key in self.emulator.inputs:
-                if key in boundaryconditions:
-                    input[key] = np.interp(input['time'],boundaryconditions['time'],boundaryconditions[key])
-            
+            # add controls first
             for key in control:
                 if not key in input:
                     input[key] = interp_zoh(input['time'],control['time'],control[key])
-
+            
+            # add boundary conditions second
+            for key in self.emulator.inputs:
+                if not key in input and key in self.boundaryconditions:
+                    input[key] = self.boundaryconditions.interp(key,input['time'])
+            
+                    
             # prepare and run the simulation
             self.emulator(time,input)
             

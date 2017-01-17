@@ -31,7 +31,7 @@ class Boundaryconditions(object):
     
     """
     
-    def __init__(self,bcs,periodic=True,extra_time=7*24*3600.):
+    def __init__(self,bcs,periodic=True,extra_time=7*24*3600.,zoh_keys=None):
         """
         Create a boundatryconditions object
         
@@ -69,6 +69,44 @@ class Boundaryconditions(object):
                 if key != 'time':
                     self.data[key] =  np.concatenate((bcs[key][:-1],bcs[key][-1]*np.ones(len(ind))))
         
+        if zoh_keys is None:
+            self.zoh_keys = []
+        else:
+            self.zoh_keys = zoh_keys
+    
+    def interp(self,key,time):
+        """
+        
+        Parameters
+        ----------
+        key : str
+            the key 
+            
+        time : np.array
+            an array of times
+            
+        """
+        
+        if len(np.array(self.data[key]).shape) == 1:
+            if key in self.zoh_keys:
+                value = interp_zoh(time,self.data['time'],self.data[key])
+            else:
+                value = np.interp(time,self.data['time'],self.data[key])
+                
+        elif len(np.array(self.data[key]).shape) == 2:
+            # 2d boundary conditions support
+            value = np.zeros((len(time),self.data[key].shape[1]))
+            if key in self.zoh_keys:
+                for j in range(self.data[key].shape[1]):
+                    value[:,j] = interp_zoh(time,self.data['time'],self.data[key][:,j])
+            else:
+                for j in range(self.data[key].shape[1]):
+                    value[:,j] = np.interp(time,self.data['time'],self.data[key][:,j])
+        else:
+                raise Exception('Only 1D or 2D data allowed as boundary conditions')
+                
+        return value
+        
         
     def __call__(self,time):
         """
@@ -88,15 +126,21 @@ class Boundaryconditions(object):
         
         bcs_int = {}
         for key in self.data:
-            try:
-                bcs_int[key] = np.interp(time,self.data['time'],self.data[key])
-            except:
-                # 2d boundary conditions support
-                bcs_int[key] = np.zeros((len(time),self.data[key].shape[1]))
-                for j in range(self.data[key].shape[1]):
-                    bcs_int[key][:,j] = np.interp(time,self.data['time'],self.data[key][:,j])
-                    
+            bcs_int[key] = self.interp(key,time)
+            
         return bcs_int
     
     def __getitem__(self,key):
         return self.data[key]
+        
+    def has_key(self, key):
+        return self.data.has_key(key)
+        
+    def __contains__(self, item):
+        return item in self.data
+        
+    def __iter__(self):
+        return self.data.__iter__()
+    
+def interp_zoh(x,xp,fp):
+    return np.array([fp[int((len(xp)-1)*(xi-xp[0])/(xp[-1]-xp[0]))] for xi in x])
