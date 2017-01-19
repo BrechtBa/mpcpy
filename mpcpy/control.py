@@ -36,13 +36,16 @@ class Control(object):
         Parameters
         ----------
         stateestimation : mpcpy.Stateestimation
-            the object used to determine the state at the beginning of the
+            The object used to determine the state at the beginning of the
             control horizon
             
         prediction : mpcpy.Prediction object
-            the object used to determine the predictions over the control
+            The object used to determine the predictions over the control
             horizon
             
+        savesolutions : int
+            Number of control solutions to be saved in the control object. Set 
+            to -1 to save all solutions
         """
         
         self.stateestimation = stateestimation
