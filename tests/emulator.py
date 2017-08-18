@@ -45,11 +45,11 @@ class TestEmulator(unittest.TestCase):
         }
 
     def test_create(self):
-        emulator = mpcpy.Emulator()
+        emulator = mpcpy.Emulator([])
 
         
     def test_call(self):
-        emulator = mpcpy.Emulator()
+        emulator = mpcpy.Emulator([])
         emulator(self.inp['time'],self.inp)
         
         self.assertEqual(emulator.res['time'][1],self.inp['time'][1])

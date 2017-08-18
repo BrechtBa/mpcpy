@@ -125,7 +125,7 @@ class MPC(object):
             for key in self.emulator.inputs:
                 if not key in input and key in self.boundaryconditions:
                     input[key] = self.boundaryconditions.interp(key,input['time'])
-                elif not key in self.boundaryconditions:
+                elif not key in input:
                     print('Warning {} not found in boundaryconditions object'.format(key))
                     
             # prepare and run the simulation

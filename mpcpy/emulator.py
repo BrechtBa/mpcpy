@@ -24,7 +24,7 @@ class Emulator(object):
     """
     Base class for defining an emulator object
     """
-    def __init__(self,inputs=None):
+    def __init__(self,inputs):
         """
         Redifine in a child class
         
@@ -41,12 +41,43 @@ class Emulator(object):
             passed to the :code`__call__` method.
             
         """
-        if inputs is None:
-            self.inputs = []
-        else:
-            self.inputs = inputs
-            
+
+        self.inputs = inputs
+        self.initial_conditions = {}
+        self.parameters = {}
         self.res = {}
+
+
+    def set_initial_conditions(self,ini):
+        """
+        Set the initial conditions.
+        
+        Parameters
+        ----------
+        ini : dict
+            dictionary with initial conditions
+            
+        """
+        
+        # set only the last value for each key
+        for key in ini:
+            try:
+                self.initial_conditions[key] = ini[key][-1]
+            except:
+                self.initial_conditions[key] = ini[key]
+        
+        
+    def set_parameters(self,par):
+        """
+        Sets the parameters.
+        
+        Parameters
+        ----------
+        par : dict
+            dictionary with parameters
+            
+        """
+        self.parameters = par
 
         
     def initialize(self):
@@ -57,7 +88,12 @@ class Emulator(object):
         
         """
         
-        self.res = {}
+        self.res = {
+            'time': np.array([0.])
+        }
+        
+        for key in self.initial_conditions:
+            self.res[key] = np.array([self.initial_conditions[key]])
         
         
     def simulate(self,starttime,stoptime,input):
@@ -243,33 +279,6 @@ class DympyEmulator(Emulator):
         for key in res:
             self.res[key] = np.array([res[key][0]])
                 
-                
-    def set_initial_conditions(self,ini):
-        """
-        Parameters
-        ----------
-        ini : dict
-            dictionary with initial conditions
-            
-        """
-        
-        # set only the last value for each key
-        for key in ini:
-            try:
-                self.initial_conditions[key] = ini[key][-1]
-            except:
-                self.initial_conditions[key] = ini[key]
-        
-        
-    def set_parameters(self,par):
-        """
-        Parameters
-        ----------
-        par : dict
-            dictionary with parameters
-            
-        """
-        self.parameters = par
     
     
     def simulate(self,starttime,stoptime,input):
