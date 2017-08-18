@@ -24,7 +24,7 @@ class Emulator(object):
     """
     Base class for defining an emulator object
     """
-    def __init__(self,inputs):
+    def __init__(self,inputs=None):
         """
         Redifine in a child class
         
@@ -34,15 +34,18 @@ class Emulator(object):
         Parameters
         ----------
         inputs : list of strings
-            list of strings of the inputs. This is done so that not all data
+            list of strings of inputs. This is done so that not all data
             from the boundary conditions and control signals have to be
             transferred to the simulation. Only the boundary conditions and 
             control signals in the :code`inputs` attribute are interpolated and
             passed to the :code`__call__` method.
             
         """
-        
-        self.inputs = inputs
+        if inputs is None:
+            self.inputs = []
+        else:
+            self.inputs = inputs
+            
         self.res = {}
 
         

@@ -24,63 +24,93 @@ import sys
 import os
 import dympy
 
-# define variables
-val = 123
 
 # current path
 modulepath = os.path.dirname(sys.modules[__name__].__file__)
 
-dymola = dympy.Dymola()
-dymola.clear()
-dymola.openModel(os.path.join(modulepath,'data','example.mo'))
-dymola.compile('example')
-
-inputlist = ['T_amb','Q_flow_sol','Q_flow_hp']
-ini = {'C_em.T': 22+273.15, 'C_in.T': 21+273.15}
-par = {'C_em.C': 10e6,
-       'C_in.C': 5e6,
-	   'UA_in_amb.G': 200,
-	   'UA_em_in.G': 1600}
-inp = {'time': [0., 3600., 7200.],
-	   'T_amb': [273.15, 274.15, 275.15],
-	   'Q_flow_sol': [500., 400., 300.],
-	   'Q_flow_hp': [4000., 4000., 4000.]}
 
 class TestEmulator(unittest.TestCase):
-	
-	def test_create(self):
-		
-		emulator = mpcpy.Emulator(dymola,inputlist)
+    def setUp(self):
 
-	def test_create_initializationtime(self):
-		
-		emulator = mpcpy.Emulator(dymola,inputlist,initializationtime=0.1)
+        self.ini = {'C_em.T': 22+273.15, 'C_in.T': 21+273.15}
+        self.par = {'C_em.C': 10e6,
+               'C_in.C': 5e6,
+               'UA_in_amb.G': 200,
+               'UA_em_in.G': 1600}
+        self.inp = {
+            'time':  np.array([0.    , 3600. , 7200.]),
+            'T_amb':      np.array([273.15, 274.15, 275.15]),
+            'Q_flow_sol': np.array([500.  , 400.  , 300.]),
+            'Q_flow_hp':  np.array([4000. , 4000. , 4000.])
+        }
 
-	def test_initialize(self):
-	
-		emulator = mpcpy.Emulator(dymola,inputlist)
-		emulator.initialize()
-	
-	def test_set_initial_conditions(self):
-	
-		emulator = mpcpy.Emulator(dymola,inputlist)
-		emulator.set_initial_conditions(ini)
-		
-	def test_set_parameters(self):
-	
-		emulator = mpcpy.Emulator(dymola,inputlist)
-		emulator.set_parameters(par)	
-		
-	def test_call(self):
-	
-		emulator = mpcpy.Emulator(dymola,inputlist)
-		emulator(inp['time'],inp)
-		
-	def test_call_after_initialization(self):
-	
-		emulator = mpcpy.Emulator(dymola,inputlist)
-		emulator.initialize()
-		emulator(inp['time'],inp)
-		
+    def test_create(self):
+        emulator = mpcpy.Emulator()
+
+        
+    def test_call(self):
+        emulator = mpcpy.Emulator()
+        emulator(self.inp['time'],self.inp)
+        
+        self.assertEqual(emulator.res['time'][1],self.inp['time'][1])
+        self.assertEqual(emulator.res['Q_flow_sol'][2],self.inp['Q_flow_sol'][2])
+        
+        
+class TestDympyEmulator(unittest.TestCase):
+    def setUp(self):
+        self.dymola = dympy.Dymola()
+        self.dymola.clear()
+        self.dymola.openModel(os.path.join(modulepath,'data','example.mo'))
+        self.dymola.compile('example')
+
+        self.inputlist = ['T_amb','Q_flow_sol','Q_flow_hp']
+        self.ini = {'C_em.T': 22+273.15, 'C_in.T': 21+273.15}
+        self.par = {'C_em.C': 10e6,
+               'C_in.C': 5e6,
+               'UA_in_amb.G': 200,
+               'UA_em_in.G': 1600}
+        self.inp = {'time': [0., 3600., 7200.],
+               'T_amb': [273.15, 274.15, 275.15],
+               'Q_flow_sol': [500., 400., 300.],
+               'Q_flow_hp': [4000., 4000., 4000.]}
+               
+               
+               
+    def tearDown(self):    
+        self.dymola.disconnect()
+        
+    def test_create(self):
+        emulator = mpcpy.DympyEmulator(self.dymola,self.inputlist)
+
+    def test_create_initializationtime(self):
+        
+        emulator = mpcpy.DympyEmulator(self.dymola,self.inputlist,initializationtime=0.1)
+
+    def test_initialize(self):
+    
+        emulator = mpcpy.DympyEmulator(self.dymola,self.inputlist)
+        emulator.initialize()
+    
+    def test_set_initial_conditions(self):
+    
+        emulator = mpcpy.DympyEmulator(self.dymola,self.inputlist)
+        emulator.set_initial_conditions(self.ini)
+        
+    def test_set_parameters(self):
+    
+        emulator = mpcpy.DympyEmulator(self.dymola,self.inputlist)
+        emulator.set_parameters(self.par)    
+        
+    def test_call(self):
+    
+        emulator = mpcpy.DympyEmulator(self.dymola,self.inputlist)
+        emulator(self.inp['time'],self.inp)
+        
+    def test_call_after_initialization(self):
+    
+        emulator = mpcpy.DympyEmulator(self.dymola,self.inputlist)
+        emulator.initialize()
+        emulator(self.inp['time'],self.inp)
+        
 if __name__ == '__main__':
     unittest.main()

@@ -118,14 +118,15 @@ class MPC(object):
             
             # add controls first
             for key in control:
-                if not key in input:
+                if key in self.emulator.inputs and not key in input:
                     input[key] = interp_zoh(input['time'],control['time'],control[key])
             
-            # add boundary conditions second
+            # add the rest of the inputs from the boundary conditions
             for key in self.emulator.inputs:
                 if not key in input and key in self.boundaryconditions:
                     input[key] = self.boundaryconditions.interp(key,input['time'])
-            
+                elif not key in self.boundaryconditions:
+                    print('Warning {} not found in boundaryconditions object'.format(key))
                     
             # prepare and run the simulation
             self.emulator(time,input)
