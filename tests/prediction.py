@@ -29,21 +29,21 @@ y1 = np.random.random(len(time))
 bcs = {'time':time, 'y0':y0, 'y1':y1}
 
 boundaryconditions = mpcpy.Boundaryconditions(bcs)
-	
+    
 
 class TestPrediction(unittest.TestCase):
-	
-	def test_create(self):
-		prediction = mpcpy.Prediction(boundaryconditions)
+    
+    def test_create(self):
+        prediction = mpcpy.Prediction(boundaryconditions)
 
-	def test_value(self):
-		prediction = mpcpy.Prediction(boundaryconditions)
+    def test_value(self):
+        prediction = mpcpy.Prediction(boundaryconditions)
 
-		t0 = 1*24*3600.
+        t0 = 1*24*3600.
 
-		self.assertEqual(prediction(t0),boundaryconditions(t0))
+        self.assertEqual(prediction(t0),boundaryconditions(t0))
 
-	
-	
+    
+    
 if __name__ == '__main__':
     unittest.main()

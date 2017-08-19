@@ -21,24 +21,24 @@ import sys
 import numpy as np
 
 class Prediction(object):
-	"""
-	Base class for defining the predictions for an mpc
-	the "prediction" method must be redefined in a child class
-	"""
-	def __init__(self,boundaryconditions):
-		"""
-		Arguments:
-		boundaryconditions:		an mpcpy.Boundaryconditions object
-		"""
-		
-		self.boundaryconditions = boundaryconditions
-		
-	def prediction(self,time):
-		"""
-		Defines perfect predictions, returns the exact boundary conditions dict
-		Can be redefined in a child class to contain an actual prediction algorithm
-		"""
-		return self.boundaryconditions(time)
-		
-	def __call__(self,time):
-		return self.prediction(time)
+    """
+    Base class for defining the predictions for an mpc
+    the "prediction" method must be redefined in a child class
+    """
+    def __init__(self,boundaryconditions):
+        """
+        Arguments:
+        boundaryconditions:        an mpcpy.Boundaryconditions object
+        """
+        
+        self.boundaryconditions = boundaryconditions
+        
+    def prediction(self,time):
+        """
+        Defines perfect predictions, returns the exact boundary conditions dict
+        Can be redefined in a child class to contain an actual prediction algorithm
+        """
+        return self.boundaryconditions(time)
+        
+    def __call__(self,time):
+        return self.prediction(time)

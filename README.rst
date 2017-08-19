@@ -33,4 +33,4 @@ In the examples folder some documented examples of how to work with mpcpy are av
 
 This example should get you started with mpcpy
 
-* `Simple space heating mpc </examples/example.ipynb>`_
+* `Simple space heating mpc </examples/simple_space_heating_mpc.ipynb>`_

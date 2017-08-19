@@ -21,24 +21,24 @@ import sys
 import numpy as np
 
 class Stateestimation(object):
-	"""
-	Base class for defining the state estimation for an mpc
-	the "stateestimation" method must be redefined in a child class
-	"""
-	def __init__(self,emulator,parameters=None):
-		"""
-		Arguments:
-		emulator:		an mpcpy.Emulator object
-		parameters:     dict, optional parameter dictionary
-		"""
-		
-		self.emulator = emulator
-		self.parameters = parameters
-		
-	def stateestimation(self,time):
-		"""
-		"""
-		return None
+    """
+    Base class for defining the state estimation for an mpc
+    the "stateestimation" method must be redefined in a child class
+    """
+    def __init__(self,emulator,parameters=None):
+        """
+        Arguments:
+        emulator:        an mpcpy.Emulator object
+        parameters:     dict, optional parameter dictionary
+        """
+        
+        self.emulator = emulator
+        self.parameters = parameters
+        
+    def stateestimation(self,time):
+        """
+        """
+        return None
 
-	def __call__(self,time):
-		return self.stateestimation(time)
+    def __call__(self,time):
+        return self.stateestimation(time)

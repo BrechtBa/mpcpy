@@ -1,4 +1,4 @@
-#!/usr/bin/env/python
+#!/usr/bin/env python
 from setuptools import setup, find_packages
 import os
 
@@ -23,10 +23,10 @@ setup(
     license='GPLv3',
     description='A package to run MPC, moving horizon simulations in Python with the option to link to Dymola or other simulation packages',
     long_description=open(os.path.join(setuppath, 'README.rst')).read(),
-	url='https://github.com/BrechtBa/mpcpy',
-	author='Brecht Baeten',
-	author_email='brecht.baeten@gmail.com',
+    url='https://github.com/BrechtBa/mpcpy',
+    author='Brecht Baeten',
+    author_email='brecht.baeten@gmail.com',
     packages=find_packages(),
-	install_requires=['numpy'],
+    install_requires=['numpy'],
     classifiers=['Programming Language :: Python :: 2.7'],
 )

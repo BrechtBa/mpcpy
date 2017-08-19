@@ -25,24 +25,24 @@ import numpy as np
 val = 123
 
 class TestStateestimation(unittest.TestCase):
-	
-	def test_create(self):
-		class Stateestimation(mpcpy.Stateestimation):
-			def stateestimation(self,time):
-				return val
-	
-		stateestimation = Stateestimation(None)
+    
+    def test_create(self):
+        class Stateestimation(mpcpy.Stateestimation):
+            def stateestimation(self,time):
+                return val
+    
+        stateestimation = Stateestimation(None)
 
-	def test_value(self):
-		class Stateestimation(mpcpy.Stateestimation):
-			def stateestimation(self,time):
-				return val
-	
-		stateestimation = Stateestimation(None)
+    def test_value(self):
+        class Stateestimation(mpcpy.Stateestimation):
+            def stateestimation(self,time):
+                return val
+    
+        stateestimation = Stateestimation(None)
 
-		self.assertEqual(stateestimation(0),val)
+        self.assertEqual(stateestimation(0),val)
 
-	
-	
+    
+    
 if __name__ == '__main__':
     unittest.main()

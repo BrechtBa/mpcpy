@@ -1,4 +1,4 @@
-#!/usr/bin/env/python
+#!/usr/bin/env python
 ################################################################################
 #    Copyright 2015 Brecht Baeten
 #    This file is part of mpcpy.
@@ -24,6 +24,6 @@ from prediction import *
 from stateestimation import *
 from emulator import *
 from examples import *
-		  
+          
 if __name__ == '__main__':
     unittest.main()
