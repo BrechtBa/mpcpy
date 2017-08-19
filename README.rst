@@ -21,7 +21,7 @@ Install via pip::
 
 Or: 
 
-* download a `release </releases>`_
+* download a `release <https://github.com/BrechtBa/mpcpy/releases>`_
 * unzip and cd to the folder
 * run ``python setup.py install``
 
@@ -32,4 +32,5 @@ Examples
 In the examples folder some documented examples of how to work with mpcpy are available as IPython Notebooks.
 
 This example should get you started with mpcpy
- - `Simple space heating mpc </tree/master/examples/example.ipynb>`_
+
+* `Simple space heating mpc </examples/example.ipynb>`_
