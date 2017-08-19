@@ -27,7 +27,7 @@ import subprocess
 # module path
 modulepath = os.path.abspath(os.path.dirname(sys.modules['mpcpy'].__file__))
 examplespath =  os.path.abspath(os.path.join(modulepath,'..','examples'))
-print(examplespath)
+
 # define null file
 fnull = open(os.devnull, 'w')
 
