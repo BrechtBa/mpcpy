@@ -1,3 +1,4 @@
+from .__version__ import version as __version__
 
 __all__ = ['boundaryconditions','control','emulator','mpc','prediction','stateestimation']
 

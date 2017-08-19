@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env/python
 ################################################################################
 #    Copyright 2015 Brecht Baeten
 #    This file is part of mpcpy.
@@ -16,6 +16,8 @@
 #    You should have received a copy of the GNU General Public License
 #    along with mpcpy.  If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
+
+import unittest
 
 from boundaryconditions import *
 from prediction import *

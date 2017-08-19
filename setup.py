@@ -1,15 +1,32 @@
-#!/usr/bin/env python
-from setuptools import setup
+#!/usr/bin/env/python
+from setuptools import setup, find_packages
+import os
 
+setuppath = os.path.dirname(os.path.abspath(__file__))
+
+# retrieve the version
+try:
+    versionfile = os.path.join(setuppath,'mpcpy','__version__.py')
+    f = open( versionfile, 'r')
+    content = f.readline()
+    splitcontent = content.split('\'')
+    version = splitcontent[1]
+    f.close()
+except:
+    raise Exception('Could not determine the version from mpcpy/__version__.py')
+
+
+# run the setup command
 setup(
     name='mpcpy',
-    version='0.1.0',
-    license='GNU GENERAL PUBLIC LICENSE',
-	description='A package to run mpc simulations in Python with Dymola or other simulation packages',
+    version=version,
+    license='GPLv3',
+    description='A package to run MPC, moving horizon simulations in Python with the option to link to Dymola or other simulation packages',
+    long_description=open(os.path.join(setuppath, 'README.rst')).read(),
 	url='https://github.com/BrechtBa/mpcpy',
 	author='Brecht Baeten',
 	author_email='brecht.baeten@gmail.com',
-	packages=['mpcpy'],
+    packages=find_packages(),
 	install_requires=['numpy'],
-	classifiers = ['Programming Language :: Python :: 2.7'],
+    classifiers=['Programming Language :: Python :: 2.7'],
 )
