@@ -9,6 +9,8 @@ mpcpy
 :Date:  |today|
 
 
+A group of classes to run Model Predictive Control (MPC) simulations using python.
+
 
 Contents:
 
@@ -19,11 +21,4 @@ Contents:
     quickstart
     reference
 
-   
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
 

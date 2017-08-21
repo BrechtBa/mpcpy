@@ -255,7 +255,7 @@ MPC
 ---
 
 The entire MPC simulation can now be run from the above defined objects. Just
-call the :code:`mpcpy.mpc` object to start the simulation. Results will be
+call the :code:`mpcpy.MPC` object to start the simulation. Results will be
 returned in a dictionary.
 
 
