@@ -41,6 +41,7 @@ from mpcpy.__version__ import version as __version__
 
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'numpydoc',
@@ -64,8 +65,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'mpcpy'
-copyright = u'2017, me'
-author = u'me'
+copyright = u'2017, Brecht Baeten'
+author = u'Brecht Baeten'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -359,3 +360,15 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #
 # texinfo_no_detailmenu = False
+
+
+
+# -- Options for numpydoc ----------------------------------------------------
+
+numpydoc_show_class_members = False
+numpydoc_show_inherited_class_members = False
+
+
+# -- Options for autodoc ----------------------------------------------------
+
+autoclass_content = 'both'

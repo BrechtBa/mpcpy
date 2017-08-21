@@ -23,68 +23,57 @@ import numpy as np
 class Emulator(object):
     """
     Base class for defining an emulator object
+    
     """
-    def __init__(self,inputs):
+    
+    def __init__(self,input_keys,parameters=None,initial_conditions=None):
         """
-        Redifine in a child class
-        
         Initializes the emulator object
-        :code`self.inputs` and :code`self.res` attributes must be defined
+        :code:`self.inputs` and :code:`self.res` attributes must be defined
         
         Parameters
         ----------
-        inputs : list of strings
+        input_keys : list of strings
             list of strings of inputs. This is done so that not all data
             from the boundary conditions and control signals have to be
             transferred to the simulation. Only the boundary conditions and 
-            control signals in the :code`inputs` attribute are interpolated and
-            passed to the :code`__call__` method.
+            control signals in the :code:`inputs` attribute are interpolated and
+            passed to the :code:`__call__` method.
+        
+        parameters : dict
+            A dictionary of parameters used by the emulator.
             
+        initial_conditions : dict
+            A dictionary of initial conditions of the system under
+            consideration.
         """
 
-        self.inputs = inputs
+        self.inputs = input_keys
+        
         self.initial_conditions = {}
-        self.parameters = {}
+        if not initial_conditions is None:
+            # set only the last value for each key
+            for key in initial_conditions:
+                try:
+                    self.initial_conditions[key] = initial_conditions[key][-1]
+                except:
+                    self.initial_conditions[key] = initial_conditions[key]
+            
+        self.parameters = {}  
+        if not parameters is None:
+            self.parameters = parameters
+            
+            
         self.res = {}
-
-
-    def set_initial_conditions(self,ini):
-        """
-        Set the initial conditions.
         
-        Parameters
-        ----------
-        ini : dict
-            dictionary with initial conditions
-            
-        """
-        
-        # set only the last value for each key
-        for key in ini:
-            try:
-                self.initial_conditions[key] = ini[key][-1]
-            except:
-                self.initial_conditions[key] = ini[key]
-        
-        
-    def set_parameters(self,par):
-        """
-        Sets the parameters.
-        
-        Parameters
-        ----------
-        par : dict
-            dictionary with parameters
-            
-        """
-        self.parameters = par
-
         
     def initialize(self):
         """
         Redefine in a child class
         
-        This method is called once before the start of the MPC
+        This method is called once before the start of the MPC and by default
+        clears the results dictionary and then add the initial conditions to it 
+        at time 0.
         
         """
         
@@ -100,9 +89,9 @@ class Emulator(object):
         """
         Redefine in a child class
         
-        This method runs the simulation and sould return a dictionary with
-        results for times between the starttime and stoptime given the inputs
-        
+        This method runs the simulation and should return a dictionary with
+        results for times between the :code:`starttime` and :code:`stoptime`
+        given the inputs.
         
         Parameters
         ----------
@@ -118,7 +107,7 @@ class Emulator(object):
             
         Returns
         -------
-        res: dict
+        dict
             dictionary with the simulation results
             
         """
@@ -128,15 +117,15 @@ class Emulator(object):
         
     def __call__(self,time,input):
         """
-        Calculate values of the system variables for the length of the inputs
-        Uses the value of _state as starting point and sets the value at the end of the simulation
+        Simulates the system and updated the results dictionary, calls the 
+        :code:`simulate`method.
         
         Parameters
         ----------
         time : numpy array
             times at which the results are requested
             
-        inputs : dict
+        input : dict
             dictionary with values for the inputs of the model, time must be a
             part of it
         
@@ -181,7 +170,21 @@ class Emulator(object):
                     self.res[key] = res[key]
                 else:
                     self.res[key] = np.interp(time,res['time'],res[key])
-                
+           
+           
+    def set_initial_conditions(self,ini):
+        print('Warning: Depreciated, set the initial conditions during the object creation with the "initial_conditions" keyword parameter.')
+        # set only the last value for each key
+        for key in ini:
+            try:
+                self.initial_conditions[key] = ini[key][-1]
+            except:
+                self.initial_conditions[key] = ini[key]
+        
+        
+    def set_parameters(self,par):
+        print('Warning: Depreciated, set the initial conditions during the object creation with the "parameters" keyword parameter.')
+        self.parameters = par
 
                 
 class DympyEmulator(Emulator):
@@ -228,7 +231,7 @@ class DympyEmulator(Emulator):
     def initialize(self):
         """
         initializes the dympy model, by simulating it for 
-        :code`self.initializationtime`. Afterwards the :code`res` attribute is
+        :code:`self.initializationtime`. Afterwards the :code:`res` attribute is
         populated
         
         Also, the keys in parameters and initialconditions are checked. If they

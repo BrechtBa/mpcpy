@@ -13,9 +13,12 @@ mpcpy
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
 
-   mpcpy
+    installation
+    quickstart
+    reference
+
    
 Indices and tables
 ==================

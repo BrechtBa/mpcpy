@@ -29,28 +29,28 @@ class MPC(object):
         Parameters
         ----------
         emulator : mpcpy.Emulator
-            the emulator object to be used
+            The emulator object to be used.
             
         control : mpcpy.Control
-            the control object to be used
+            The control object to be used.
             
         boundaryconditions : mpcpy.Boundaryconditions
-            the boundaryconditions object to be used
+            The boundaryconditions object to be used.
         
         emulationtime : number
-            the total time of the simulation
+            The total time of the simulation.
             
         resulttimestep : number
-            the timestep for which the results are returned
+            The timestep for which the results are returned.
             
         nextstepcalculator : function
-            function returning an integer representing the number of receding
+            Function returning an integer representing the number of receding
             timesteps to skip. When not specified, no steps are skipped and the 
-            next step is 1
+            next step is 1.
             
         plotfunction : function
-            a function which creates or updates a plot for live viewing of
-            results, probably broken, untested
+            A function which creates or updates a plot for live viewing of
+            results, probably broken, untested.
         
         """
         
@@ -79,8 +79,8 @@ class MPC(object):
          
         Returns
         -------
-        res : dict
-            a dictionary with results, also stored in the res attribute
+        dict
+            A dictionary with results, also stored in the res attribute.
             
         """
         
@@ -118,7 +118,7 @@ class MPC(object):
             
             # add controls first
             for key in control:
-                if key in self.emulator.inputs and not key in input:
+                if not key in input:
                     input[key] = interp_zoh(input['time'],control['time'],control[key])
             
             # add the rest of the inputs from the boundary conditions

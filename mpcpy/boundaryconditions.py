@@ -22,31 +22,35 @@ import numpy as np
 
 class Boundaryconditions(object):
     """
-    A class to define boundaryconditions in the format required by mpcpy
-    
-    Examples
-    --------
-    >>> bcs = Boundaryconditions({'time': np.arange(0.,24*3600.+1,3600.), 'T_amb':np.random.random(25)})
-    >>> bcs(12.1*3600)
-    
+    A class to define boundaryconditions in the format required by mpcpy.
+
     """
     
-    def __init__(self,bcs,periodic=True,extra_time=7*24*3600.,zoh_keys=None):
+    def __init__(self,data,periodic=True,extra_time=7*24*3600.,zoh_keys=None):
         """
-        Create a boundatryconditions object
+        Create a boundaryconditions object.
         
         Parameters
         ----------
-        bcs : dict
-            actual boundary conditions and a time vector
+        data : dict
+            Actual boundary conditions and a time vector.
             
-        periodic : boolean
-            determines how to determine values when time is larger than the
-            boundary conditions time
+        periodic : boolean, optional
+            Determines how to determine values when time is larger than the
+            boundary conditions time.
             
-        extra_time : float
-            maximum allowed time outside the boundary conditions time, should be
-            at least as large as the control horizon
+        extra_time : float, optional
+            Maximum allowed time outside the boundary conditions time, should be
+            at least as large as the control horizon.
+    
+        zoh_keys : list of strings, optional
+            Keys which will be interpolated with zero-order hold. All other
+            values are interpolated linearly.
+    
+        Examples
+        --------
+        >>> bcs = Boundaryconditions({'time': np.arange(0.,24*3600.+1,3600.), 'T_amb':np.random.random(25)})
+        >>> bcs(12.1*3600)
             
         """
         
@@ -54,36 +58,38 @@ class Boundaryconditions(object):
         
         # create a new time vector including the extra time
         # this method is about 2 times faster than figuring out the correct time during interpolation
-        ind = np.where( bcs['time']-bcs['time'][0] < extra_time )[0]
-        self.data['time'] = np.concatenate((bcs['time'][:-1],bcs['time'][ind]+bcs['time'][-1]-bcs['time'][0] ))
+        ind = np.where( data['time']-data['time'][0] < extra_time )[0]
+        self.data['time'] = np.concatenate((data['time'][:-1],data['time'][ind]+data['time'][-1]-data['time'][0] ))
         
         if periodic:
             # the values at time lower than extra_time are repeated at the end of the dataset
             # extra_time should thus be larger than the control horizon
-            for key in bcs:
+            for key in data:
                 if key != 'time':
-                    self.data[key] =  np.concatenate((bcs[key][:-1],bcs[key][ind]))
+                    self.data[key] =  np.concatenate((data[key][:-1],data[key][ind]))
         else:
             # last value is repeated after the actual data
-            for key in bcs:
+            for key in data:
                 if key != 'time':
-                    self.data[key] =  np.concatenate((bcs[key][:-1],bcs[key][-1]*np.ones(len(ind))))
+                    self.data[key] =  np.concatenate((data[key][:-1],data[key][-1]*np.ones(len(ind))))
         
         if zoh_keys is None:
             self.zoh_keys = []
         else:
             self.zoh_keys = zoh_keys
     
+    
     def interp(self,key,time):
         """
+        Interpolate a value to an array of timesteps
         
         Parameters
         ----------
         key : str
-            the key 
+            The key to interpolate.
             
         time : np.array
-            an array of times
+            An array of times to interpolate to.
             
         """
         
@@ -119,8 +125,8 @@ class Boundaryconditions(object):
         
         Returns
         -------
-        bcs_int : dict
-            ditionary with interpolated boundary conditions
+        dict
+            Dictionary with interpolated boundary conditions.
             
         """
         
@@ -129,6 +135,7 @@ class Boundaryconditions(object):
             bcs_int[key] = self.interp(key,time)
             
         return bcs_int
+    
     
     def __getitem__(self,key):
         return self.data[key]
@@ -143,4 +150,26 @@ class Boundaryconditions(object):
         return self.data.__iter__()
     
 def interp_zoh(x,xp,fp):
+    """
+    Interpolate with zero order hold
+    
+    Parameters
+    ----------
+    x : np.array
+        An array of independent variables where the values are required.
+        
+    xp : np.array
+        An array of independent variables where the values are known, must be
+        monotonic and increasing.
+        
+    fp : np.array
+        The known values at points xp.
+        
+    Returns
+    -------
+    np.array
+        The interpolated values
+    
+    """
+    
     return np.array([fp[int((len(xp)-1)*(xi-xp[0])/(xp[-1]-xp[0]))] for xi in x])

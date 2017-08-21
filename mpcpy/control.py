@@ -24,12 +24,12 @@ class Control(object):
     """
     Base class for defining the control for an mpc simulation
     
-    the :code`formulation` and :code`solution` methods must be redefined in a
+    the :code:`formulation` and :code:`solution` methods must be redefined in a
     child class to generate control signals over the control horizon
     
     """
     
-    def __init__(self,stateestimation,prediction,parameters=None,horizon=3*24*3600,timestep=3600,receding=3600,savesolutions=0):
+    def __init__(self,stateestimation,prediction,parameters=None,horizon=None,timestep=None,receding=None,savesolutions=0):
         """
         Initializes the control object
         
@@ -37,23 +37,51 @@ class Control(object):
         ----------
         stateestimation : mpcpy.Stateestimation
             The object used to determine the state at the beginning of the
-            control horizon
+            control horizon.
             
         prediction : mpcpy.Prediction object
             The object used to determine the predictions over the control
-            horizon
+            horizon.
+        
+        parameters : dict
+            Dictionary specifying control parameters.
+            
+        horizon : number
+            The length of the control horizon.
+            
+        timestep : number
+            The length of the control timestep.
+            
+        receding : number
+            The receding time, i.e. the time between subsequent calls to
+            this control object.
             
         savesolutions : int
             Number of control solutions to be saved in the control object. Set 
-            to -1 to save all solutions
+            to -1 to save all solutions.
+            
         """
         
         self.stateestimation = stateestimation
         self.prediction = prediction
-        self.horizon = horizon
-        self.timestep = timestep
+        
+        if horizon is None:
+            raise Exception('horizon parameter must be supplied')
+        else:    
+            self.horizon = horizon
+        
+        if timestep is None:
+            raise Exception('timestep parameter must be supplied')
+        else:    
+            self.timestep = timestep        
+        
         self.receding = receding
-        self.parameters = parameters
+        if self.receding is None:
+            self.receding = self.timestep
+            
+        self.parameters = {}
+        if not parameters is None:
+            self.parameters = parameters
         
         self.savesolutions = savesolutions
         self.solutions = []
@@ -68,7 +96,7 @@ class Control(object):
         Parameters
         ----------
         starttime : real
-            Time at the beginning of the control horizon
+            Time at the beginning of the control horizon.
             
         """
         return np.arange(starttime,starttime+self.horizon+0.01*self.timestep,self.timestep,dtype=np.float)
@@ -83,7 +111,7 @@ class Control(object):
         amount of time and performs actions which must not be repeated.
         
         Should be redefined in a child class to set up the actual control
-        algorithm
+        algorithm.
         
         """
         pass
@@ -91,21 +119,25 @@ class Control(object):
         
     def solution(self,state,prediction):
         """
-        Returns the control profiles ("the plan")
+        Returns the control profiles ("the plan").
         
         Should be redefined in a child class to set up the actual control
-        algorithm
+        algorithm.
         
         Parameters
         ----------
         state : dict
             Dictionary with the states at the start of the control horizon as
-            returned by mpcpy.stateestimation
+            returned by the stateestimation object.
             
         prediction : dict
             Dictionary with the values of predictions over the control horizon
-            as returned by mpcpy.prediction    
-            
+            as returned by the prediction object.  
+          
+        Returns
+        -------
+        dict
+            Dictionary with the solution, "time" must be a key.
         """
         sol = {}
         return sol
@@ -113,12 +145,18 @@ class Control(object):
     
     def __call__(self,starttime):
         """
-        Calculate the value of the control signal for the next timestep
+        Calculate the value of the control signal over the control horizon.
+        Calls the :code:`solution` method.
         
         Parameters
         ----------
         starttime : real
-            Time at the beginning of the control horizon
+            Time at the beginning of the control horizon.
+            
+        Returns
+        -------
+        dict
+            A dictionary with representing the control signals with time.
             
         """
         
@@ -151,30 +189,31 @@ class Control(object):
                 
         return solution
         
-    def cplex_infeasibilityanalysis(self,ocp):
-        """
-        Give information about infeasible constraints in cplex
         
-        Parameters
-        ----------
-        ocp : CPlex object
-            A CPlex optimization problem which is infeasible
-            
-        """
+def cplex_infeasibilityanalysis(ocp):
+    """
+    Give information about infeasible constraints in cplex.
+    
+    Parameters
+    ----------
+    ocp : CPlex object
+        A CPlex optimization problem which is infeasible
         
-        ocp.conflict.refine(ocp.conflict.all_constraints())
-        
-        try:
-            for conflict,v in enumerate(ocp.conflict.get()):
-                if v > 0:
-                    for c in ocp.conflict.get_groups(conflict)[1]:
-                        if c[0]==1:
-                            print( 'Lower bound constraint on variable {}: {}'.format(c[1],ocp.variables.get_names(c[1])) )
-                        if c[0]==2:
-                            print( 'Upper bound constraint on variable {}: {}'.format(c[1],ocp.variables.get_names(c[1])) )
-                        if c[0]==3:
-                            print( 'Linear constraint {}: {}'.format(c[1],ocp.linear_constraints.get_names(c[1])) )
-                        else:
-                            print(ocp.conflict.get_groups(conflict))
-        except Exception as e:
-            pass
+    """
+    
+    ocp.conflict.refine(ocp.conflict.all_constraints())
+    
+    try:
+        for conflict,v in enumerate(ocp.conflict.get()):
+            if v > 0:
+                for c in ocp.conflict.get_groups(conflict)[1]:
+                    if c[0]==1:
+                        print( 'Lower bound constraint on variable {}: {}'.format(c[1],ocp.variables.get_names(c[1])) )
+                    if c[0]==2:
+                        print( 'Upper bound constraint on variable {}: {}'.format(c[1],ocp.variables.get_names(c[1])) )
+                    if c[0]==3:
+                        print( 'Linear constraint {}: {}'.format(c[1],ocp.linear_constraints.get_names(c[1])) )
+                    else:
+                        print(ocp.conflict.get_groups(conflict))
+    except Exception as e:
+        pass
