@@ -123,11 +123,16 @@ class Emulator(object):
         Parameters
         ----------
         time : numpy array
-            times at which the results are requested
+            Times at which the results are requested.
             
         input : dict
-            dictionary with values for the inputs of the model, time must be a
-            part of it
+            Dictionary with values for the inputs of the model, time must be a
+            part of it.
+        
+        Returns
+        -------
+        dict
+            Dictionary with the complete simulation results.
         
         Examples
         --------
@@ -170,6 +175,8 @@ class Emulator(object):
                     self.res[key] = res[key]
                 else:
                     self.res[key] = np.interp(time,res['time'],res[key])
+                    
+        return self.res
            
            
     def set_initial_conditions(self,ini):
