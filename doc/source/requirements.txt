@@ -1,0 +1,3 @@
+# mpcpy requirements.txt
+
+numpy
