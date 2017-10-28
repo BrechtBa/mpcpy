@@ -17,40 +17,18 @@
 #    along with mpcpy.  If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
 
+
 import unittest
-import mpcpy
-import numpy as np
-import sys
-import os
-import subprocess
 
-# module path
-modulepath = os.path.abspath(os.path.dirname(sys.modules['mpcpy'].__file__))
-examplespath =  os.path.abspath(os.path.join(modulepath,'..','examples'))
-
-# define null file
-fnull = open(os.devnull, 'w')
 
 class TestExamples(unittest.TestCase):
     
     def test_simple_space_heating_mpc(self):
-        
-        currentdir = os.getcwd()
-        os.chdir(examplespath)
-        filename = 'simple_space_heating_mpc'
-        p = subprocess.Popen(['jupyter', 'nbconvert', '--execute', '--to', 'notebook', '{}.ipynb'.format(filename)], stdout=fnull, stderr=subprocess.PIPE)
-        output, error = p.communicate()
-        os.remove('{}.nbconvert.ipynb'.format(filename))
-        os.chdir(currentdir)
-        
-        self.assertEqual(p.returncode, 0, error)
+        from examples import simple_space_heating_mpc
 
     def test_quickstart(self):
-
         from examples import quickstart
 
-    
-    
         
 if __name__ == '__main__':
     unittest.main()

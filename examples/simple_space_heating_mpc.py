@@ -262,7 +262,7 @@ print(control(0))
 
 # MPC
 mpc = mpcpy.MPC(emulator, control, disturbances, emulationtime=1*24*3600., resulttimestep=60)
-res = mpc()
+res = mpc(verbose=1)
 
 
 # Plot results
@@ -289,7 +289,7 @@ def_stateestimation = StateestimationPerfect(def_emulator)
 def_control = LinearProgram(def_stateestimation, prediction,
                             parameters=control_parameters, horizon=24*3600., timestep=3600.)
 def_mpc = mpcpy.MPC(def_emulator, def_control, disturbances, emulationtime=1*24*3600., resulttimestep=60)
-def_res = def_mpc()
+def_res = def_mpc(verbose=1)
 
 fix, ax = plt.subplots(2, 1)
 ax[0].plot(def_res['time']/3600, def_res['Q_flow_hp'], 'k', label='hp')
@@ -308,4 +308,5 @@ ax[1].set_xlabel('Time (h)')
 ax[1].legend(loc='lower right')
 
 
-plt.show()
+if __name__ == '__main__':
+    plt.show()

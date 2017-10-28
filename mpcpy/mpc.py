@@ -74,10 +74,15 @@ class MPC(object):
         self.res = {}
         self.appendres = {}
 
-    def __call__(self):
+    def __call__(self, verbose=0):
         """
         Runs the mpc simulation
-         
+
+        Parameters
+        ----------
+        verbose: optional, int
+            Controls the amount of print output
+
         Returns
         -------
         dict
@@ -88,19 +93,17 @@ class MPC(object):
         # initialize the emulator
         self.emulator.initialize()
         starttime = 0
-        
-        
+
         if self.plotfunction:
             (fig,ax,pl) = self.plotfunction()
 
         # prepare a progress bar
-        barwidth = 80
+        barwidth = 80-2
         barvalue = 0
-        print('Run MPC %s |' %(' '*(barwidth-10)))
-        # sys.stdout.write('[%s]\n' % (' ' * barwidth))
-        # sys.stdout.flush()
-        # sys.stdout.write('\b' * (barwidth+1))
-        
+        if verbose > 0:
+            print('Running MPC')
+            print('[' + (' '*barwidth) + ']', end='')
+
         while starttime < self.emulationtime:
         
             # calculate control signals for the control horizon
@@ -147,21 +150,18 @@ class MPC(object):
             starttime = self.emulator.res['time'][-1]
 
             # update the progress bar
-            if starttime/self.emulationtime*barwidth >= barvalue:
-                addbars = int(round(starttime/self.emulationtime*barwidth-barvalue))
-                sys.stdout.write(addbars*'-')
-                sys.stdout.flush()
-                barvalue += addbars
-        
+            if verbose > 0:
+                if starttime/self.emulationtime*barwidth >= barvalue:
+                    barvalue += int(round(starttime/self.emulationtime*barwidth-barvalue))
+                    print('\r[' + ('='*barvalue) + (' '*(barwidth-barvalue)) + ']', end='')
+
         # copy the results to a local res dictionary
         self.res.update(self.emulator.res)
         
         # interpolate the boundary conditions and add them to self.res
         self.res.update(self.disturbances(self.res['time']))
-
-        sys.stdout.write('  done')
-        sys.stdout.write("\n")
-        sys.stdout.flush()
+        if verbose > 0:
+            print(' done')
         
         return self.res
 
