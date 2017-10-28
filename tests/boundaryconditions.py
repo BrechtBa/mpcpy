@@ -31,22 +31,22 @@ bcs = {'time':time, 'y0':y0, 'y1':y1}
 class TestBoundaryconditions(unittest.TestCase):
     
     def test_create(self):
-        boundaryconditions = mpcpy.Boundaryconditions(bcs)
+        boundaryconditions = mpcpy.Disturbances(bcs)
     
     def test_create_periodic(self):
-        boundaryconditions = mpcpy.Boundaryconditions(bcs,periodic=True)
-        boundaryconditions = mpcpy.Boundaryconditions(bcs,periodic=False)
+        boundaryconditions = mpcpy.Disturbances(bcs, periodic=True)
+        boundaryconditions = mpcpy.Disturbances(bcs, periodic=False)
         
     def test_create_extratime(self):
-        boundaryconditions = mpcpy.Boundaryconditions(bcs,extra_time=1*24*3600)
-        boundaryconditions = mpcpy.Boundaryconditions(bcs,periodic=False,extra_time=1*24*3600)
+        boundaryconditions = mpcpy.Disturbances(bcs, extra_time=1 * 24 * 3600)
+        boundaryconditions = mpcpy.Disturbances(bcs, periodic=False, extra_time=1 * 24 * 3600)
     
     def test_getitem(self):
-        boundaryconditions = mpcpy.Boundaryconditions(bcs)
+        boundaryconditions = mpcpy.Disturbances(bcs)
         temp = boundaryconditions['y0']
 
     def test_value(self):
-        boundaryconditions = mpcpy.Boundaryconditions(bcs)    
+        boundaryconditions = mpcpy.Disturbances(bcs)
         
         t0 = 1*24*3600.
         val = boundaryconditions(t0)
@@ -54,7 +54,7 @@ class TestBoundaryconditions(unittest.TestCase):
         self.assertEqual(val,{'time':t0,'y0':np.interp(t0,time,y0),'y1':np.interp(t0,time,y1)})
 
     def test_value_periodic(self):
-        boundaryconditions = mpcpy.Boundaryconditions(bcs)
+        boundaryconditions = mpcpy.Disturbances(bcs)
         
         t0 = 1*24*3600.
         t1 = t0 + time[-1]
@@ -68,7 +68,7 @@ class TestBoundaryconditions(unittest.TestCase):
     def test_value_periodic_timeoffset(self):
         bcs_timeoffset = dict(bcs)
         bcs_timeoffset['time'] = bcs_timeoffset['time'] + 2*24*3600.
-        boundaryconditions = mpcpy.Boundaryconditions(bcs_timeoffset)
+        boundaryconditions = mpcpy.Disturbances(bcs_timeoffset)
         
         t0 = 3*24*3600.
         t1 = t0 + (time[-1]-time[0])
@@ -80,7 +80,7 @@ class TestBoundaryconditions(unittest.TestCase):
         self.assertEqual(val0['y1'],val1['y1'])
     
     def test_value_notperiodic(self):
-        boundaryconditions = mpcpy.Boundaryconditions(bcs,periodic=False)
+        boundaryconditions = mpcpy.Disturbances(bcs, periodic=False)
         
         t0 = 1*24*3600.
         t1 = t0 + time[-1]

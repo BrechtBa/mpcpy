@@ -20,9 +20,11 @@
 import sys
 import numpy as np
 
+
 class MPC(object):
 
-    def __init__(self,emulator,control,boundaryconditions,emulationtime=7*24*3600,resulttimestep=600,nextstepcalculator=None,plotfunction=None):
+    def __init__(self, emulator, control, disturbances,
+                 emulationtime=7 * 24 * 3600, resulttimestep=600, nextstepcalculator=None, plotfunction=None):
         """
         initialize an MPC object
         
@@ -34,8 +36,8 @@ class MPC(object):
         control : mpcpy.Control
             The control object to be used.
             
-        boundaryconditions : mpcpy.Boundaryconditions
-            The boundaryconditions object to be used.
+        disturbances : mpcpy.Disturbances
+            The disturbances object to be used.
         
         emulationtime : number
             The total time of the simulation.
@@ -56,7 +58,7 @@ class MPC(object):
         
         self.emulator = emulator
         self.control = control
-        self.boundaryconditions = boundaryconditions
+        self.disturbances = disturbances
 
         self.emulationtime = emulationtime
         self.resulttimestep = resulttimestep
@@ -72,7 +74,6 @@ class MPC(object):
         self.res = {}
         self.appendres = {}
 
-        
     def __call__(self):
         """
         Runs the mpc simulation
@@ -96,9 +97,9 @@ class MPC(object):
         barwidth = 80
         barvalue = 0
         print('Run MPC %s |' %(' '*(barwidth-10)))
-        #sys.stdout.write('[%s]\n' % (' ' * barwidth))
-        #sys.stdout.flush()
-        #sys.stdout.write('\b' * (barwidth+1))
+        # sys.stdout.write('[%s]\n' % (' ' * barwidth))
+        # sys.stdout.flush()
+        # sys.stdout.write('\b' * (barwidth+1))
         
         while starttime < self.emulationtime:
         
@@ -107,33 +108,40 @@ class MPC(object):
             
             # create a simulation time vector
             nextStep = self.nextstepcalculator(control)
-            time = np.arange(starttime,min(self.emulationtime+self.resulttimestep,starttime+nextStep*self.control.receding+0.01*self.resulttimestep),self.resulttimestep,dtype=np.float)
-            time[-1] = min(time[-1],self.emulationtime)
+            time = np.arange(
+                starttime,
+                min(self.emulationtime+self.resulttimestep, starttime+nextStep*self.control.receding+0.01*self.resulttimestep),
+                self.resulttimestep, dtype=np.float
+            )
+            time[-1] = min(time[-1], self.emulationtime)
             
             # create input of all controls and the required boundary conditions
             # add times at the control time steps minus 1e-6 times the result time step to achieve zero order hold
-            ind = np.where((control['time']-1e-6*self.resulttimestep > time[0]) & (control['time']-1e-6*self.resulttimestep <= time[-1]))
+            ind = np.where(
+                (control['time']-1e-6*self.resulttimestep > time[0])
+                & (control['time']-1e-6*self.resulttimestep <= time[-1])
+            )
             inputtime = np.sort(np.concatenate((time, control['time'][ind]-1e-6*self.resulttimestep)))
             input = {'time': inputtime}
             
             # add controls first
             for key in control:
                 if not key in input:
-                    input[key] = interp_zoh(input['time'],control['time'],control[key])
+                    input[key] = interp_zoh(input['time'], control['time'], control[key])
             
             # add the rest of the inputs from the boundary conditions
             for key in self.emulator.inputs:
-                if not key in input and key in self.boundaryconditions:
-                    input[key] = self.boundaryconditions.interp(key,input['time'])
+                if not key in input and key in self.disturbances:
+                    input[key] = self.disturbances.interp(key, input['time'])
                 elif not key in input:
-                    print('Warning {} not found in boundaryconditions object'.format(key))
+                    print('Warning {} not found in disturbances object'.format(key))
                     
             # prepare and run the simulation
-            self.emulator(time,input)
+            self.emulator(time, input)
             
             # plot results
             if self.plotfunction:
-                self.plotfunction(pl=pl,res=self.emulator.res)
+                self.plotfunction(pl=pl, res=self.emulator.res)
             
             # update starting time
             starttime = self.emulator.res['time'][-1]
@@ -146,17 +154,17 @@ class MPC(object):
                 barvalue += addbars
         
         # copy the results to a local res dictionary
-        self.res.update( self.emulator.res )
+        self.res.update(self.emulator.res)
         
         # interpolate the boundary conditions and add them to self.res
-        self.res.update( self.boundaryconditions(self.res['time']) )
-        
-        
+        self.res.update(self.disturbances(self.res['time']))
+
         sys.stdout.write('  done')
         sys.stdout.write("\n")
         sys.stdout.flush()
         
         return self.res
 
-def interp_zoh(x,xp,fp):
+
+def interp_zoh(x, xp, fp):
     return np.array([fp[int((len(xp)-1)*(xi-xp[0])/(xp[-1]-xp[0]))] for xi in x])

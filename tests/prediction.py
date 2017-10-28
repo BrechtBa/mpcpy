@@ -28,7 +28,7 @@ y0 = np.sin(time/(24*3600.))
 y1 = np.random.random(len(time))
 bcs = {'time':time, 'y0':y0, 'y1':y1}
 
-boundaryconditions = mpcpy.Boundaryconditions(bcs)
+boundaryconditions = mpcpy.Disturbances(bcs)
     
 
 class TestPrediction(unittest.TestCase):

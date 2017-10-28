@@ -1,5 +1,6 @@
 *.pyc
-
 mpcpy.egg-info
 dist
 build
+env
+.idea

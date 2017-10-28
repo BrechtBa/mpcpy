@@ -19,11 +19,11 @@
 
 import unittest
 
-from boundaryconditions import *
-from prediction import *
-from stateestimation import *
-from emulator import *
-from examples import *
+from .boundaryconditions import *
+from .prediction import *
+from .stateestimation import *
+from .emulator import *
+from .examples import *
           
 if __name__ == '__main__':
     unittest.main()

@@ -29,7 +29,8 @@ class Control(object):
     
     """
     
-    def __init__(self,stateestimation,prediction,parameters=None,horizon=None,timestep=None,receding=None,savesolutions=0):
+    def __init__(self, stateestimation, prediction,
+                 parameters=None, horizon=None, timestep=None, receding=None, savesolutions=0):
         """
         Initializes the control object
         
@@ -87,8 +88,7 @@ class Control(object):
         self.solutions = []
         
         self._formulated = False
-        
-        
+
     def time(self,starttime):
         """
         Returns a time vector over the control horizon with the defined timestep
@@ -99,9 +99,8 @@ class Control(object):
             Time at the beginning of the control horizon.
             
         """
-        return np.arange(starttime,starttime+self.horizon+0.01*self.timestep,self.timestep,dtype=np.float)
+        return np.arange(starttime, starttime+self.horizon+0.01*self.timestep, self.timestep, dtype=np.float)
 
-        
     def formulation(self):
         """
         Performs actions the first time the control is run.

@@ -1,5 +1,0 @@
-# mpcpy requirements.txt
-
-numpy
-numpydoc
-pyomo

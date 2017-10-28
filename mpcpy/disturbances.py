@@ -20,15 +20,15 @@
 import sys
 import numpy as np
 
-class Boundaryconditions(object):
+class Disturbances(object):
     """
-    A class to define boundaryconditions in the format required by mpcpy.
+    A class to define disturbances in the format required by mpcpy.
 
     """
     
-    def __init__(self,data,periodic=True,extra_time=7*24*3600.,zoh_keys=None):
+    def __init__(self, data, periodic=True, extra_time=7*24*3600., zoh_keys=None):
         """
-        Create a boundaryconditions object.
+        Create a disturbances object.
         
         Parameters
         ----------
@@ -49,7 +49,7 @@ class Boundaryconditions(object):
     
         Examples
         --------
-        >>> bcs = Boundaryconditions({'time': np.arange(0.,24*3600.+1,3600.), 'T_amb':np.random.random(25)})
+        >>> bcs = Disturbances({'time': np.arange(0.,24*3600.+1,3600.), 'T_amb':np.random.random(25)})
         >>> bcs(12.1*3600)
             
         """

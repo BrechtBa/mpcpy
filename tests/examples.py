@@ -39,23 +39,15 @@ class TestExamples(unittest.TestCase):
         os.chdir(examplespath)
         filename = 'simple_space_heating_mpc'
         p = subprocess.Popen(['jupyter', 'nbconvert', '--execute', '--to', 'notebook', '{}.ipynb'.format(filename)], stdout=fnull, stderr=subprocess.PIPE)
-        output,error = p.communicate()
+        output, error = p.communicate()
         os.remove('{}.nbconvert.ipynb'.format(filename))
         os.chdir(currentdir)
         
-        self.assertEqual(p.returncode,0,error)
+        self.assertEqual(p.returncode, 0, error)
 
-    def test_cplex_api(self):
-        
-        currentdir = os.getcwd()
-        os.chdir(examplespath)
-        filename = 'cplex_api'
-        p = subprocess.Popen(['jupyter', 'nbconvert', '--execute', '--to', 'notebook', '{}.ipynb'.format(filename)], stdout=fnull, stderr=subprocess.PIPE)
-        output,error = p.communicate()
-        os.remove('{}.nbconvert.ipynb'.format(filename))
-        os.chdir(currentdir)
-        
-        self.assertEqual(p.returncode,0,error)
+    def test_quickstart(self):
+
+        from examples import quickstart
 
     
     

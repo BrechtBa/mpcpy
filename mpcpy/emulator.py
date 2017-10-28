@@ -17,8 +17,8 @@
 #    along with mpcpy.  If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
 
-import sys
 import numpy as np
+
 
 class Emulator(object):
     """
@@ -26,7 +26,7 @@ class Emulator(object):
     
     """
     
-    def __init__(self,input_keys,parameters=None,initial_conditions=None):
+    def __init__(self, input_keys, parameters=None, initial_conditions=None):
         """
         Initializes the emulator object
         :code:`self.inputs` and :code:`self.res` attributes must be defined
@@ -49,7 +49,6 @@ class Emulator(object):
         """
 
         self.inputs = input_keys
-        
         self.initial_conditions = {}
         if not initial_conditions is None:
             # set only the last value for each key
@@ -58,15 +57,11 @@ class Emulator(object):
                     self.initial_conditions[key] = initial_conditions[key][-1]
                 except:
                     self.initial_conditions[key] = initial_conditions[key]
-            
         self.parameters = {}  
         if not parameters is None:
             self.parameters = parameters
-            
-            
         self.res = {}
-        
-        
+
     def initialize(self):
         """
         Redefine in a child class
@@ -80,12 +75,10 @@ class Emulator(object):
         self.res = {
             'time': np.array([0.])
         }
-        
         for key in self.initial_conditions:
             self.res[key] = np.array([self.initial_conditions[key]])
-        
-        
-    def simulate(self,starttime,stoptime,input):
+
+    def simulate(self, starttime, stoptime, input):
         """
         Redefine in a child class
         
@@ -114,8 +107,7 @@ class Emulator(object):
         
         return {}
 
-        
-    def __call__(self,time,input):
+    def __call__(self, time, input):
         """
         Simulates the system and updated the results dictionary, calls the 
         :code:`simulate`method.
@@ -137,13 +129,13 @@ class Emulator(object):
         Examples
         --------
         >>> em = Emulator(['u1'])
-        >>> t  = np.arange(0.,3600.1,600.)
+        >>> t  = np.arange(0., 3600.1, 600.)
         >>> u1 = 5.*np.ones_like(t)
-        >>> em(t,['time':t,'u1':u1])
+        >>> em(t, ['time': t, 'u1': u1])
         
         """
         
-        res = self.simulate(time[0],time[-1],input)
+        res = self.simulate(time[0], time[-1], input)
         
         # adding the inputs to the result
         for key in input.keys():
@@ -154,10 +146,9 @@ class Emulator(object):
                     if len(input[key]) == 1:
                         self.res[key] = input[key]
                     else:
-                        self.res[key] = np.append(self.res[key][:-1],np.interp(time,input['time'],input[key]))
+                        self.res[key] = np.append(self.res[key][:-1], np.interp(time, input['time'], input[key]))
                 else:
-                    self.res[key] = np.interp(time,input['time'],input[key])
-        
+                    self.res[key] = np.interp(time, input['time'], input[key])
         # interpolate results to the input points in time
         for key in res.keys():
             if key in self.res:
@@ -166,31 +157,30 @@ class Emulator(object):
                     self.res[key] = res[key]
                 else:
                     if key == 'time':
-                        self.res[key] = np.append(self.res[key][:-1],time)
+                        self.res[key] = np.append(self.res[key][:-1], time)
                     else:
-                        self.res[key] = np.append(self.res[key][:-1],np.interp(time,res['time'],res[key]))
+                        self.res[key] = np.append(self.res[key][:-1], np.interp(time, res['time'], res[key]))
                         
             else:
                 if len(res[key]) == 1:
                     self.res[key] = res[key]
                 else:
-                    self.res[key] = np.interp(time,res['time'],res[key])
-                    
+                    self.res[key] = np.interp(time, res['time'], res[key])
         return self.res
-           
-           
-    def set_initial_conditions(self,ini):
-        print('Warning: Depreciated, set the initial conditions during the object creation with the "initial_conditions" keyword parameter.')
+
+    def set_initial_conditions(self, ini):
+        print('Warning: Depreciated,'
+              'set the initial conditions during the object creation with the "initial_conditions" keyword parameter.')
         # set only the last value for each key
         for key in ini:
             try:
                 self.initial_conditions[key] = ini[key][-1]
             except:
                 self.initial_conditions[key] = ini[key]
-        
-        
-    def set_parameters(self,par):
-        print('Warning: Depreciated, set the initial conditions during the object creation with the "parameters" keyword parameter.')
+
+    def set_parameters(self, par):
+        print('Warning: Depreciated,'
+              'set the initial conditions during the object creation with the "parameters" keyword parameter.')
         self.parameters = par
 
                 
@@ -200,7 +190,7 @@ class DympyEmulator(Emulator):
     
     """
     
-    def __init__(self,dymola,inputs,initializationtime=1,**kwargs):
+    def __init__(self, dymola, inputs, initializationtime=1, **kwargs):
         """
         Initialize a dympy object for use as an MPC emulation
         
@@ -231,10 +221,9 @@ class DympyEmulator(Emulator):
         # check for additional dymola arguments
         self.simulation_args = {}
         for key in kwargs:
-            if key in ['OutputInterval','NumberOfIntervals','Tolerance','FixedStepSize','Algorithm']:
+            if key in ['OutputInterval', 'NumberOfIntervals', 'Tolerance', 'FixedStepSize', 'Algorithm']:
                 self.simulation_args[key] = kwargs[key]
-                
-        
+
     def initialize(self):
         """
         initializes the dympy model, by simulating it for 
@@ -254,7 +243,7 @@ class DympyEmulator(Emulator):
         self.res = {}
         
         # simulate the model for a very short time to get the initial states in the res dict
-        self.dymola.simulate(StartTime=0,StopTime=self.initializationtime)
+        self.dymola.simulate(StartTime=0, StopTime=self.initializationtime)
         res = self.dymola.get_result()
         
         # remove the initial conditions and parameters which are not in the results file
@@ -282,16 +271,12 @@ class DympyEmulator(Emulator):
             self.dymola.set_parameters(self.initial_conditions)
             
             self.dymola.set_parameters(self.parameters)
-            self.dymola.simulate(StartTime=0,StopTime=self.initializationtime)
+            self.dymola.simulate(StartTime=0, StopTime=self.initializationtime)
             res = self.dymola.get_result()
-            
-        
         for key in res:
             self.res[key] = np.array([res[key][0]])
-                
-    
-    
-    def simulate(self,starttime,stoptime,input):
+
+    def simulate(self, starttime, stoptime, input):
         """
         """
         
@@ -302,7 +287,7 @@ class DympyEmulator(Emulator):
             pass
         
         try:
-            self.dymola.simulate(StartTime=starttime,StopTime=stoptime,**self.simulation_args)
+            self.dymola.simulate(StartTime=starttime, StopTime=stoptime, **self.simulation_args)
         except:
             print('Ignoring error during simulation at time {}'.format(starttime));
             
@@ -312,41 +297,13 @@ class DympyEmulator(Emulator):
             print('Ignoring error while loading dymola res file at time {}'.format(input['time'][0]))
     
         return res
-    
-    
+
             
-def interp_averaged(t,tp,yp):
+def interp_averaged(t, tp, yp):
     y = np.zeros_like(t)
     for i in range(len(t)-1):
-        y[i] = np.mean(yp[np.where( (tp>=t[i]) & (tp<t[i+1]) )])
+        y[i] = np.mean(yp[np.where((tp >= t[i]) & (tp < t[i+1]))])
         
-    y[-1] = np.interp(t[-1],tp,yp)
+    y[-1] = np.interp(t[-1], tp, yp)
     
     return y
-
-class Nodymola():
-    """
-    A class with the required methods to test things when Dymola is not available
-    """
-    def __init__(self):
-        pass
-    def openModel(self,filename):
-        pass
-    def clear(self):
-        pass
-    def compile(self,modelname,parameters=None):
-        pass
-    def simulate(self,StartTime=0,StopTime=1,OutputInterval=0,NumberOfIntervals=500,Tolerance=1e-4,FixedStepSize=0,Algorithm='dassl'):
-        pass
-    def set_parameters(self,pardict):
-        pass
-    def get_result(self):
-        return {}
-    def write_dsu(self,inputdict):
-        pass
-    def get_res(self,par):
-        return []
-    def dsfinal2dsin(self):
-        pass
-    def run_cmd(self,cmd):
-        pass

@@ -32,7 +32,7 @@ class Prediction(object):
         
         Parameters
         ----------
-        boundaryconditions: mpcpy.Boundaryconditions
+        boundaryconditions: mpcpy.Disturbances
             An :code:`mpcpy.Boundaryconditions` object to derive the predictions from.
         
         parameters : dict
