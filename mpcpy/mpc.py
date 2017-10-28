@@ -17,7 +17,7 @@
 #    along with mpcpy.  If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
 
-import sys
+from __future__ import print_function
 import numpy as np
 
 
