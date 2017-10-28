@@ -184,6 +184,4 @@ ax[1].plot(res['time'], res['x'])
 ax[1].set_xlabel('time')
 ax[1].set_ylabel('x')
 
-
-if __name__ == '__main__':
-    plt.show()
+plt.draw()
