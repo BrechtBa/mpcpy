@@ -17,8 +17,8 @@
 #    along with mpcpy.  If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
 
-import sys
 import numpy as np
+
 
 class Disturbances(object):
     """
@@ -49,8 +49,8 @@ class Disturbances(object):
     
         Examples
         --------
-        >>> bcs = Disturbances({'time': np.arange(0.,24*3600.+1,3600.), 'T_amb':np.random.random(25)})
-        >>> bcs(12.1*3600)
+        >>> dst = Disturbances({'time': np.arange(0.,24*3600.+1,3600.), 'T_amb':np.random.random(25)})
+        >>> dst(12.1*3600)
             
         """
         
@@ -58,28 +58,27 @@ class Disturbances(object):
         
         # create a new time vector including the extra time
         # this method is about 2 times faster than figuring out the correct time during interpolation
-        ind = np.where( data['time']-data['time'][0] < extra_time )[0]
-        self.data['time'] = np.concatenate((data['time'][:-1],data['time'][ind]+data['time'][-1]-data['time'][0] ))
+        ind = np.where(data['time']-data['time'][0] < extra_time)[0]
+        self.data['time'] = np.concatenate((data['time'][:-1], data['time'][ind]+data['time'][-1]-data['time'][0]))
         
         if periodic:
             # the values at time lower than extra_time are repeated at the end of the dataset
             # extra_time should thus be larger than the control horizon
             for key in data:
                 if key != 'time':
-                    self.data[key] =  np.concatenate((data[key][:-1],data[key][ind]))
+                    self.data[key] = np.concatenate((data[key][:-1], data[key][ind]))
         else:
             # last value is repeated after the actual data
             for key in data:
                 if key != 'time':
-                    self.data[key] =  np.concatenate((data[key][:-1],data[key][-1]*np.ones(len(ind))))
+                    self.data[key] = np.concatenate((data[key][:-1], data[key][-1]*np.ones(len(ind))))
         
         if zoh_keys is None:
             self.zoh_keys = []
         else:
             self.zoh_keys = zoh_keys
-    
-    
-    def interp(self,key,time):
+
+    def interp(self, key, time):
         """
         Interpolate a value to an array of timesteps
         
@@ -95,26 +94,25 @@ class Disturbances(object):
         
         if len(np.array(self.data[key]).shape) == 1:
             if key in self.zoh_keys:
-                value = interp_zoh(time,self.data['time'],self.data[key])
+                value = interp_zoh(time, self.data['time'], self.data[key])
             else:
-                value = np.interp(time,self.data['time'],self.data[key])
+                value = np.interp(time, self.data['time'], self.data[key])
                 
         elif len(np.array(self.data[key]).shape) == 2:
             # 2d boundary conditions support
-            value = np.zeros((len(time),self.data[key].shape[1]))
+            value = np.zeros((len(time), self.data[key].shape[1]))
             if key in self.zoh_keys:
                 for j in range(self.data[key].shape[1]):
-                    value[:,j] = interp_zoh(time,self.data['time'],self.data[key][:,j])
+                    value[:, j] = interp_zoh(time, self.data['time'], self.data[key][:, j])
             else:
                 for j in range(self.data[key].shape[1]):
-                    value[:,j] = np.interp(time,self.data['time'],self.data[key][:,j])
+                    value[:, j] = np.interp(time, self.data['time'], self.data[key][:, j])
         else:
                 raise Exception('Only 1D or 2D data allowed as boundary conditions')
                 
         return value
         
-        
-    def __call__(self,time):
+    def __call__(self, time):
         """
         Return the interpolated boundary conditions
         
@@ -130,14 +128,13 @@ class Disturbances(object):
             
         """
         
-        bcs_int = {}
+        dst_int = {}
         for key in self.data:
-            bcs_int[key] = self.interp(key,time)
+            dst_int[key] = self.interp(key, time)
             
-        return bcs_int
-    
-    
-    def __getitem__(self,key):
+        return dst_int
+
+    def __getitem__(self, key):
         return self.data[key]
         
     def has_key(self, key):
@@ -148,8 +145,9 @@ class Disturbances(object):
         
     def __iter__(self):
         return self.data.__iter__()
-    
-def interp_zoh(x,xp,fp):
+
+
+def interp_zoh(x, xp, fp):
     """
     Interpolate with zero order hold
     
